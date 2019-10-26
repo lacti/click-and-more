@@ -3,7 +3,7 @@ import { ApiGatewayManagementApi } from "aws-sdk";
 import mem from "mem";
 import logger from "./logger";
 import { IConnectionId, Request, Response } from "./message";
-import { Board, ChangedTile, ITile, IUser } from "./model";
+import { Board, ChangedTile, IPos, ITile, IUser } from "./model";
 import { getRedis } from "./redis";
 
 interface IGameUser extends IUser, IConnectionId {}
@@ -52,10 +52,37 @@ const getRepository = mem(
 const asRedisKey = (gameId: string) => `click-and-more/${gameId}`;
 const defaultSize = { width: 20, height: 20 };
 
+class Debouncer {
+  private flushTimer: NodeJS.Timer | null = null;
+
+  constructor(
+    private readonly callback: () => Promise<any>,
+    private readonly timeout: number
+  ) {}
+
+  public update = () => {
+    if (this.flushTimer === null) {
+      this.flushTimer = setTimeout(this.callback, this.timeout);
+    }
+  };
+
+  public clear = () => {
+    if (this.flushTimer !== null) {
+      clearTimeout(this.flushTimer);
+      this.flushTimer = null;
+    }
+  };
+}
+
 export class Game {
   private model: IGame;
 
-  constructor(private readonly gameId: string) {}
+  private changedPoses: { [y: number]: /* x */ Set<number> } = {};
+  private changedDebouncer: Debouncer;
+
+  constructor(private readonly gameId: string) {
+    this.changedDebouncer = new Debouncer(this.flushChanged, 100);
+  }
 
   public onLoad = async () => {
     this.model =
@@ -65,6 +92,10 @@ export class Game {
   };
 
   public onStore = async () => {
+    if (Object.keys(this.changedPoses).length > 0) {
+      logger.info(`flush before store`);
+      await this.flushChanged();
+    }
     await getRepository().set(asRedisKey(this.gameId), this.model);
     logger.info(`storeModel`, this.model);
   };
@@ -73,6 +104,7 @@ export class Game {
     logger.info(`beginOfRequest`, request, this.model.users, this.debugBoard());
     switch (request.type) {
       case "enter":
+        await this.flushChanged();
         const nextSerial = this.model.userSerial + 1;
         const newbie: IGameUser = {
           connectionId: request.connectionId,
@@ -118,6 +150,7 @@ export class Game {
             }
           })
         );
+        await this.flushChanged();
         await Promise.all(
           this.model.users
             .map(u => u.connectionId)
@@ -137,6 +170,7 @@ export class Game {
         if (!me) {
           break;
         }
+        await this.flushChanged();
         await getSender(request.connectionId)({
           type: "entered",
           board: this.model.board,
@@ -172,16 +206,7 @@ export class Game {
           changed.push({ ...newTile, y, x });
           this.model.board[y][x] = newTile;
         }
-        await Promise.all(
-          this.model.users
-            .map(u => u.connectionId)
-            .map(connectionId =>
-              getSender(connectionId)({
-                type: "clicked",
-                values: changed
-              })
-            )
-        );
+        this.enqueueChanged(changed);
         break;
     }
     logger.info(`endOfRequest`, request, this.model.users, this.debugBoard());
@@ -191,6 +216,43 @@ export class Game {
     JSON.stringify(
       this.model.board.filter(row => row.filter(col => col.i !== noOwnerIndex))
     );
+
+  private flushChanged = async () => {
+    const poses = this.changedPoses;
+    this.changedPoses = {};
+    this.changedDebouncer.clear();
+
+    const changed: ChangedTile[] = [];
+    for (const y of Object.keys(poses)) {
+      for (const x of poses[y]) {
+        changed.push({ ...this.model.board[y][x], y: +y, x: +x });
+      }
+    }
+    logger.debug(`changed`, JSON.stringify(changed));
+    if (changed.length === 0) {
+      return;
+    }
+    await Promise.all(
+      this.model.users
+        .map(u => u.connectionId)
+        .map(connectionId =>
+          getSender(connectionId)({
+            type: "clicked",
+            values: changed
+          }).catch(logger.error)
+        )
+    );
+  };
+
+  private enqueueChanged = async (poses: IPos[]) => {
+    for (const { y, x } of poses) {
+      if (!this.changedPoses[y]) {
+        this.changedPoses[y] = new Set<number>();
+      }
+      this.changedPoses[y].add(x);
+    }
+    this.changedDebouncer.update();
+  };
 }
 
 const apimgmt = new ApiGatewayManagementApi({
