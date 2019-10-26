@@ -1,0 +1,76 @@
+service:
+  name: click-and-more-api
+
+plugins:
+  - serverless-webpack
+  - serverless-prune-plugin
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: ap-northeast-2
+  stage: ${env:STAGE}
+  tracing:
+    apiGateway: true
+    lambda: true
+  apiGateway:
+    binaryMediaTypes:
+      - "image/*"
+  environment:
+    PUBLIC_URL: ${env:PUBLIC_URL}
+    REDIS_HOST: ${env:REDIS_HOST}
+    REDIS_PASSWORD: ${env:REDIS_PASSWORD}
+    WS_ENDPOINT: ${env:WS_ENDPOINT}
+    BOTTOM_HALF_LAMBDA: ${self:custom.bottomHalfLambda}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource:
+        - Fn::Join:
+            - ":"
+            - - "arn:aws:lambda"
+              - Ref: "AWS::Region"
+              - Ref: "AWS::AccountId"
+              - "function"
+              - ${self:custom.bottomHalfLambda}
+
+custom:
+  bottomHalfLambda: ${self:service.name}-${self:provider.stage}-bottomHalf
+  prune:
+    automatic: true
+    number: 7
+
+functions:
+  connect:
+    handler: src/gateway.connect
+    timeout: 6
+    memorySize: 128
+    events:
+      - websocket:
+          route: $connect
+  disconnect:
+    handler: src/gateway.disconnect
+    timeout: 6
+    memorySize: 128
+    events:
+      - websocket:
+          route: $disconnect
+  message:
+    handler: src/gateway.message
+    timeout: 6
+    memorySize: 128
+    events:
+      - websocket:
+          route: $default
+  bottomHalf:
+    handler: src/actor.bottomHalf
+    timeout: 900
+  serve:
+    handler: src/serve.handle
+    events:
+      - http: GET /
+      - http: GET /{file}
+      - http: GET /static/css/{file}
+      - http: GET /static/js/{file}
+      - http: GET /static/media/{file}
