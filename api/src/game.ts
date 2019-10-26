@@ -3,7 +3,7 @@ import { ApiGatewayManagementApi } from "aws-sdk";
 import mem from "mem";
 import logger from "./logger";
 import { IConnectionId, Request, Response } from "./message";
-import { Board, ChangedTile, IUser } from "./model";
+import { Board, ChangedTile, ITile, IUser } from "./model";
 import { getRedis } from "./redis";
 
 interface IGameUser extends IUser, IConnectionId {}
@@ -110,6 +110,14 @@ export class Game {
             u => u.connectionId !== request.connectionId
           )
         };
+        this.model.board.forEach(row =>
+          row.forEach(tile => {
+            if (tile.i === leaver.index) {
+              tile.i = noOwnerIndex;
+              tile.v = 0;
+            }
+          })
+        );
         await Promise.all(
           this.model.users
             .map(u => u.connectionId)
@@ -146,16 +154,21 @@ export class Game {
         const changed: ChangedTile[] = [];
         for (const { y, x, delta } of request.data) {
           const tile = this.model.board[y][x];
-          const newValue =
-            tile.i === noOwnerIndex
-              ? delta
-              : tile.i === user.index
-              ? tile.v + delta
-              : tile.v - delta;
-          const newTile = {
-            i: newValue > 0 ? tile.i : noOwnerIndex,
-            v: newValue > 0 ? newValue : 0
-          };
+          const newTile = ((): ITile => {
+            if (tile.i === noOwnerIndex) {
+              return { i: user.index, v: delta };
+            } else if (tile.i === user.index) {
+              return { i: user.index, v: tile.v + delta };
+            }
+            const newValue = tile.v - delta;
+            if (newValue > 0) {
+              return { i: tile.i, v: newValue };
+            } else if (newValue === 0) {
+              return { i: noOwnerIndex, v: 0 };
+            } else {
+              return { i: user.index, v: -newValue };
+            }
+          })();
           changed.push({ ...newTile, y, x });
           this.model.board[y][x] = newTile;
         }
