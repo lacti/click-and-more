@@ -18,7 +18,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "prebundle": "find build -name '*.map' -exec rm -f {} \\; && rm -f  ../api/html-bundle.zip",
-    "bundle": "cd build && zip -0 -r ../../api/html-bundle.zip *"
+    "bundle": "cd build && zip -9 -r ../../api/html-bundle.zip *"
   },
   "eslintConfig": {
     "extends": "react-app"
