@@ -43,31 +43,31 @@ custom:
 
 functions:
   connect:
-    handler: src/gateway.connect
+    handler: src/index.connect
     timeout: 6
     memorySize: 128
     events:
       - websocket:
           route: $connect
   disconnect:
-    handler: src/gateway.disconnect
+    handler: src/index.disconnect
     timeout: 6
     memorySize: 128
     events:
       - websocket:
           route: $disconnect
   message:
-    handler: src/gateway.message
+    handler: src/index.message
     timeout: 6
     memorySize: 128
     events:
       - websocket:
           route: $default
   bottomHalf:
-    handler: src/actor.bottomHalf
+    handler: src/index.bottomHalf
     timeout: 900
   serve:
-    handler: src/serve.handle
+    handler: src/index.serve
     events:
       - http: GET /
       - http: GET /{file}

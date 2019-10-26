@@ -1,7 +1,7 @@
 import * as AdmZip from "adm-zip";
 import { APIGatewayProxyHandler } from "aws-lambda";
 import * as mime from "mime-types";
-import "source-map-support/register";
+// import "source-map-support/register";
 
 const publicUrl = process.env.PUBLIC_URL!;
 const bundleFileName = "html-bundle.zip";

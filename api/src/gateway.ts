@@ -1,5 +1,5 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import "source-map-support/register";
+// import "source-map-support/register";
 import { requestToActor } from "./actor";
 import logger from "./logger";
 import { ActionRequest } from "./message";
