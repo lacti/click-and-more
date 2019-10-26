@@ -1,0 +1,39 @@
+{
+  "name": "api-front",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@types/jest": "24.0.18",
+    "@types/node": "12.7.9",
+    "@types/react": "16.9.4",
+    "@types/react-dom": "16.9.1",
+    "react": "^16.10.1",
+    "react-dom": "^16.10.1",
+    "react-scripts": "3.2.0",
+    "react-use-websocket": "^0.9.8",
+    "typescript": "3.6.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "prebundle": "find build -name '*.map' -exec rm -f {} \\; && rm -f  ../api/html-bundle.zip",
+    "bundle": "cd build && zip -0 -r ../../api/html-bundle.zip *"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {}
+}
