@@ -2,6 +2,11 @@ const path = require("path");
 const slsw = require("serverless-webpack");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
+const ignoreWarnings = [
+  [/call_capturer.js/, /the request of a dependency is an expression/],
+  [/colors.js/, /the request of a dependency is an expression/]
+];
+
 module.exports = {
   mode: slsw.lib.webpack.isLocal ? "development" : "production",
   entry: slsw.lib.entries,
@@ -17,10 +22,14 @@ module.exports = {
   target: "node",
   externals: [/aws-sdk/],
   module: {
-    rules: [
-      // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
-      { test: /\.tsx?$/, loader: "ts-loader" }
-    ]
+    rules: [{ test: /\.tsx?$/, loader: "ts-loader" }]
   },
-  plugins: [new CopyWebpackPlugin(["html-bundle.zip"])]
+  plugins: [new CopyWebpackPlugin(["html-bundle.zip"])],
+  stats: {
+    warningsFilter: warning => {
+      return ignoreWarnings.some(regexs =>
+        regexs.every(regex => regex.test(warning))
+      );
+    }
+  }
 };

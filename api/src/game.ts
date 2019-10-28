@@ -2,9 +2,18 @@ import { RedisRepository } from "@yingyeothon/repository-redis";
 import { ApiGatewayManagementApi } from "aws-sdk";
 import mem from "mem";
 import logger from "./logger";
-import { IConnectionId, Request, Response } from "./message";
+import {
+  IClickRequest,
+  IConnectionId,
+  IEnterRequest,
+  ILeaveRequest,
+  ILoadRequest,
+  Request,
+  Response
+} from "./message";
 import { Board, ChangedTile, IPos, ITile, IUser } from "./model";
 import { getRedis } from "./redis";
+import { captureAsync, capturePromise } from "./xray";
 
 interface IGameUser extends IUser, IConnectionId {}
 
@@ -85,137 +94,164 @@ export class Game {
   }
 
   public onLoad = async () => {
+    logger.info(`onLoad`);
     this.model =
-      (await getRepository().get<IGame>(asRedisKey(this.gameId))) ||
-      newGame(defaultSize.height, defaultSize.width);
-    logger.info(`loadModel`, this.model);
+      (await capturePromise(
+        `loadFromRedis`,
+        getRepository().get<IGame>(asRedisKey(this.gameId))
+      )) || newGame(defaultSize.height, defaultSize.width);
+    logger.info(`loadModel`);
   };
 
   public onStore = async () => {
+    logger.info(`onStore`);
     if (Object.keys(this.changedPoses).length > 0) {
       logger.info(`flush before store`);
       await this.flushChanged();
     }
-    await getRepository().set(asRedisKey(this.gameId), this.model);
-    logger.info(`storeModel`, this.model);
+    await capturePromise(
+      `storeToRedis`,
+      getRepository().set(asRedisKey(this.gameId), this.model)
+    );
+    logger.info(`storeModel`);
   };
 
   public onRequest = async (request: Request) => {
-    logger.info(`beginOfRequest`, request, this.model.users, this.debugBoard());
-    switch (request.type) {
-      case "enter":
-        await this.flushChanged();
-        const nextSerial = this.model.userSerial + 1;
-        const newbie: IGameUser = {
-          connectionId: request.connectionId,
-          color: getRandomColor(),
-          index: nextSerial
-        };
-        logger.info(`newbie`, newbie);
-
-        this.model = {
-          ...this.model,
-          userSerial: nextSerial,
-          users: [...this.model.users, newbie]
-        };
-        await Promise.all(
-          this.model.users
-            .filter(u => u.connectionId !== request.connectionId)
-            .map(u =>
-              getSender(u.connectionId)({
-                type: "newbie",
-                newbie
-              })
-            )
-        );
-        break;
-      case "leave":
-        const leaver = this.model.users.filter(
-          u => u.connectionId === request.connectionId
-        )[0];
-        if (!leaver) {
-          break;
-        }
-        this.model = {
-          ...this.model,
-          users: this.model.users.filter(
-            u => u.connectionId !== request.connectionId
-          )
-        };
-        this.model.board.forEach(row =>
-          row.forEach(tile => {
-            if (tile.i === leaver.index) {
-              tile.i = noOwnerIndex;
-              tile.v = 0;
-            }
-          })
-        );
-        await this.flushChanged();
-        await Promise.all(
-          this.model.users
-            .map(u => u.connectionId)
-            .map(connectionId =>
-              getSender(connectionId)({
-                type: "leaved",
-                leaver
-              })
-            )
-        );
-        break;
-      case "load":
-        const me = this.model.users.find(
-          u => u.connectionId === request.connectionId
-        );
-        logger.info(`me`, me);
-        if (!me) {
-          break;
-        }
-        await this.flushChanged();
-        await getSender(request.connectionId)({
-          type: "entered",
-          board: this.model.board,
-          me,
-          users: this.model.users
-        });
-        break;
-      case "click":
-        const user = this.model.users.filter(
-          u => u.connectionId === request.connectionId
-        )[0];
-        if (!user) {
-          break;
-        }
-        const changed: ChangedTile[] = [];
-        for (const { y, x, delta } of request.data) {
-          const tile = this.model.board[y][x];
-          const newTile = ((): ITile => {
-            if (tile.i === noOwnerIndex) {
-              return { i: user.index, v: delta };
-            } else if (tile.i === user.index) {
-              return { i: user.index, v: tile.v + delta };
-            }
-            const newValue = tile.v - delta;
-            if (newValue > 0) {
-              return { i: tile.i, v: newValue };
-            } else if (newValue === 0) {
-              return { i: noOwnerIndex, v: 0 };
-            } else {
-              return { i: user.index, v: -newValue };
-            }
-          })();
-          changed.push({ ...newTile, y, x });
-          this.model.board[y][x] = newTile;
-        }
-        this.enqueueChanged(changed);
-        break;
-    }
-    logger.info(`endOfRequest`, request, this.model.users, this.debugBoard());
+    logger.info(`beginOfRequest`, request);
+    await this.dispatchRequest(request);
+    logger.info(`endOfRequest`, request);
   };
 
-  private debugBoard = () =>
-    JSON.stringify(
-      this.model.board.filter(row => row.filter(col => col.i !== noOwnerIndex))
+  private dispatchRequest = async (request: Request) => {
+    switch (request.type) {
+      case "enter":
+        return captureAsync(`processEnter`, this.onEnterRequest)(request);
+      case "leave":
+        return captureAsync(`processLeave`, this.onLeaveRequest)(request);
+      case "load":
+        return captureAsync(`processLoad`, this.onLoadRequest)(request);
+      case "click":
+        return captureAsync(`processClick`, this.onClickRequest)(request);
+    }
+    return Promise.resolve();
+  };
+
+  private onEnterRequest = async (request: IEnterRequest) => {
+    await this.flushChanged();
+    const nextSerial = this.model.userSerial + 1;
+    const newbie: IGameUser = {
+      connectionId: request.connectionId,
+      color: getRandomColor(),
+      index: nextSerial
+    };
+    logger.info(`newbie`, newbie);
+
+    this.model = {
+      ...this.model,
+      userSerial: nextSerial,
+      users: [...this.model.users, newbie]
+    };
+    logger.info(`before-broadcast-enter`);
+    await Promise.all(
+      this.model.users
+        .filter(u => u.connectionId !== request.connectionId)
+        .map(u =>
+          getSender(u.connectionId)({
+            type: "newbie",
+            newbie
+          })
+        )
     );
+    logger.info(`after-broadcast-enter`);
+  };
+
+  private onLeaveRequest = async (request: ILeaveRequest) => {
+    const leaver = this.model.users.filter(
+      u => u.connectionId === request.connectionId
+    )[0];
+    if (!leaver) {
+      return;
+    }
+    this.model = {
+      ...this.model,
+      users: this.model.users.filter(
+        u => u.connectionId !== request.connectionId
+      )
+    };
+    this.model.board.forEach(row =>
+      row.forEach(tile => {
+        if (tile.i === leaver.index) {
+          tile.i = noOwnerIndex;
+          tile.v = 0;
+        }
+      })
+    );
+    await this.flushChanged();
+
+    logger.info(`before-broadcast-leave`);
+    await Promise.all(
+      this.model.users
+        .map(u => u.connectionId)
+        .map(connectionId =>
+          getSender(connectionId)({
+            type: "leaved",
+            leaver
+          })
+        )
+    );
+    logger.info(`after-broadcast-leave`);
+  };
+
+  private onLoadRequest = async (request: ILoadRequest) => {
+    const me = this.model.users.find(
+      u => u.connectionId === request.connectionId
+    );
+    logger.info(`me`, me);
+    if (!me) {
+      return;
+    }
+    await this.flushChanged();
+
+    logger.info(`before-send-loaded`);
+    await getSender(request.connectionId)({
+      type: "entered",
+      board: this.model.board,
+      me,
+      users: this.model.users
+    });
+    logger.info(`after-send-loaded`);
+  };
+
+  private onClickRequest = async (request: IClickRequest) => {
+    const user = this.model.users.filter(
+      u => u.connectionId === request.connectionId
+    )[0];
+    if (!user) {
+      return;
+    }
+    const changed: ChangedTile[] = [];
+    for (const { y, x, delta } of request.data) {
+      const tile = this.model.board[y][x];
+      const newTile = ((): ITile => {
+        if (tile.i === noOwnerIndex) {
+          return { i: user.index, v: delta };
+        } else if (tile.i === user.index) {
+          return { i: user.index, v: tile.v + delta };
+        }
+        const newValue = tile.v - delta;
+        if (newValue > 0) {
+          return { i: tile.i, v: newValue };
+        } else if (newValue === 0) {
+          return { i: noOwnerIndex, v: 0 };
+        } else {
+          return { i: user.index, v: -newValue };
+        }
+      })();
+      changed.push({ ...newTile, y, x });
+      this.model.board[y][x] = newTile;
+    }
+    this.enqueueChanged(changed);
+  };
 
   private flushChanged = async () => {
     const poses = this.changedPoses;
@@ -232,16 +268,22 @@ export class Game {
     if (changed.length === 0) {
       return;
     }
-    await Promise.all(
-      this.model.users
-        .map(u => u.connectionId)
-        .map(connectionId =>
-          getSender(connectionId)({
-            type: "clicked",
-            values: changed
-          }).catch(logger.error)
-        )
+
+    logger.info(`before-flush-changed`);
+    await capturePromise(
+      `broadcastChanged`,
+      Promise.all(
+        this.model.users
+          .map(u => u.connectionId)
+          .map(connectionId =>
+            getSender(connectionId)({
+              type: "clicked",
+              values: changed
+            }).catch(logger.error)
+          )
+      )
     );
+    logger.info(`after-flush-changed`);
   };
 
   private enqueueChanged = async (poses: IPos[]) => {
@@ -260,10 +302,13 @@ const apimgmt = new ApiGatewayManagementApi({
 });
 
 const getSender = mem((connectionId: string) => (response: Response) =>
-  apimgmt
-    .postToConnection({
-      ConnectionId: connectionId,
-      Data: JSON.stringify(response)
-    })
-    .promise()
+  capturePromise(
+    `postToConnection`,
+    apimgmt
+      .postToConnection({
+        ConnectionId: connectionId,
+        Data: JSON.stringify(response)
+      })
+      .promise()
+  )
 );

@@ -44,21 +44,21 @@ custom:
 functions:
   connect:
     handler: src/index.connect
-    timeout: 6
+    timeout: 30
     memorySize: 128
     events:
       - websocket:
           route: $connect
   disconnect:
     handler: src/index.disconnect
-    timeout: 6
+    timeout: 30
     memorySize: 128
     events:
       - websocket:
           route: $disconnect
   message:
     handler: src/index.message
-    timeout: 6
+    timeout: 30
     memorySize: 128
     events:
       - websocket:

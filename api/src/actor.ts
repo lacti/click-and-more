@@ -10,6 +10,7 @@ import { Game } from "./game";
 import logger from "./logger";
 import { Request } from "./message";
 import { getRedis } from "./redis";
+import { capturePromise } from "./xray";
 
 const getActorSystem = mem(
   () =>
@@ -35,11 +36,14 @@ const getActor = mem((gameId: string) => {
   );
 });
 
-const topHalfTimeout = 1 * 1000;
+const topHalfTimeout = 27 * 1000;
 const bottomHalfTimeout = 890 * 1000;
 
 export const requestToActor = (gameId: string, message: Request) =>
-  getActor(gameId).send(message, { shiftTimeout: topHalfTimeout });
+  capturePromise(
+    `sendMessage-${message.type}`,
+    getActor(gameId).send(message, { shiftTimeout: topHalfTimeout })
+  );
 
 export const bottomHalf = handleActorLambdaEvent<IActorLambdaEvent>({
   spawn: ({ actorName }) => getActor(actorName),
