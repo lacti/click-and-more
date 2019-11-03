@@ -35,7 +35,7 @@ export const handle: APIGatewayProxyHandler = async event => {
 
   // Encode a game message and send it to Redis Q.
   await redisSend([
-    `RPUSHX "${redisKeys.queue(gameId)}" ${encodeMessage({
+    `RPUSH "${redisKeys.queue(gameId)}" ${encodeMessage({
       ...request,
       connectionId
     })}`

@@ -18,7 +18,7 @@ export const handle: APIGatewayProxyHandler = async event => {
   // Send a leave message to Redis Q and delete (gameId, connectionId).
   await redisSend([
     gameId
-      ? `RPUSHX "${redisKeys.queue(gameId)}" "${encodeMessage({
+      ? `RPUSH "${redisKeys.queue(gameId)}" "${encodeMessage({
           type: "leave",
           connectionId
         })}"`

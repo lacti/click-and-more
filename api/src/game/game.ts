@@ -89,18 +89,20 @@ export default class Game {
   private stageEnd = async () => {
     console.info(`Game END-stage`, this.gameId);
     await broadcastEnd(Object.keys(this.users), calculateScore(this.board));
+
+    // TODO disconnect all user connections.
   };
 
   private processEnterLeaveLoad = async (requests: GameRequest[]) => {
     for (const request of requests) {
       switch (request.type) {
         case "enter":
-          if (this.isValidUser(request)) {
-            await this.onEnter(request);
-          }
+          await this.onEnter(request);
           break;
         case "leave":
-          await this.onLeave(request);
+          if (this.isValidUser(request)) {
+            await this.onLeave(request);
+          }
           break;
         case "load":
           if (this.isValidUser(request)) {

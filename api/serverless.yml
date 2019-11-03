@@ -52,21 +52,21 @@ functions:
   connect:
     handler: src/proxy/connect.handle
     timeout: 3
-    memorySize: 128
+    memorySize: 256
     events:
       - websocket:
           route: $connect
   disconnect:
     handler: src/proxy/disconnect.handle
     timeout: 3
-    memorySize: 128
+    memorySize: 256
     events:
       - websocket:
           route: $disconnect
   message:
     handler: src/proxy/message.handle
     timeout: 3
-    memorySize: 128
+    memorySize: 256
     events:
       - websocket:
           route: $default
