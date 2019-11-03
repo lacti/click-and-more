@@ -1,6 +1,5 @@
 const path = require("path");
 const slsw = require("serverless-webpack");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 const ignoreWarnings = [
   [/call_capturer.js/, /the request of a dependency is an expression/],
@@ -24,7 +23,6 @@ module.exports = {
   module: {
     rules: [{ test: /\.tsx?$/, loader: "ts-loader" }]
   },
-  plugins: [new CopyWebpackPlugin(["html-bundle.zip"])],
   stats: {
     warningsFilter: warning => {
       return ignoreWarnings.some(regexs =>

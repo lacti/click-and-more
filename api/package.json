@@ -4,23 +4,16 @@
   "description": "Serverless backend for Click-and-more",
   "main": "handler.ts",
   "scripts": {
-    "deploy": "sls deploy"
+    "build": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless package",
+    "deploy": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless deploy"
   },
   "dependencies": {
-    "@yingyeothon/actor-system": "^0.1.8",
-    "@yingyeothon/actor-system-aws-lambda-support": "^0.1.6",
-    "@yingyeothon/actor-system-redis-support": "^0.1.3",
-    "@yingyeothon/logger": "^0.1.0",
-    "@yingyeothon/repository": "^0.1.3",
-    "@yingyeothon/repository-redis": "^0.1.3",
     "adm-zip": "^0.4.13",
-    "aws-xray-sdk-core": "^2.4.0",
     "ioredis": "^4.14.1",
     "mem": "^5.1.1",
     "mime-types": "^2.1.24",
     "original-fs": "^1.1.0",
     "source-map-support": "^0.5.10",
-    "time-span": "^3.1.0",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
@@ -34,8 +27,10 @@
     "aws-sdk": "2.488.0",
     "copy-webpack-plugin": "^5.0.4",
     "jest": "^24.9.0",
-    "serverless": "^1.55.1",
+    "prettier": "^1.18.2",
+    "serverless": "^1.56.1",
     "serverless-offline": "^5.12.0",
+    "serverless-plugin-scripts": "^1.0.2",
     "serverless-prune-plugin": "^1.4.1",
     "serverless-webpack": "^5.3.1",
     "ts-jest": "^24.1.0",

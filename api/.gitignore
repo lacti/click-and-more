@@ -13,3 +13,5 @@ html-bundle.zip
 
 # Environment secrets
 .envrc
+
+*.log
