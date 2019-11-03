@@ -18,6 +18,19 @@ export interface IUser {
   color: string;
 }
 
+export enum GameStage {
+  Wait = "wait",
+  Running = "running",
+  End = "end"
+}
+
+export interface GameScore {
+  [index: number]: {
+    tile: number;
+    power: number;
+  };
+}
+
 export type YxValue<V> = { [y: number]: { [x: number]: V } };
 export type YxCount = YxValue<number>;
 export type YxTile = YxValue<ITile>;

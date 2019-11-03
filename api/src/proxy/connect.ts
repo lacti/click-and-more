@@ -7,6 +7,7 @@ import env from "./support/env";
 import { redisSend } from "./support/redis";
 
 const expirationSeconds = 300;
+const defaultGameId = "de07b0bb-0061-4d8c-8077-178a6822320c";
 
 export const handle: APIGatewayProxyHandler = async event => {
   const connectionId = event.requestContext.connectionId;
@@ -15,12 +16,12 @@ export const handle: APIGatewayProxyHandler = async event => {
   console.debug(`Headers`, event.headers);
 
   // A client should send a "X-GAME-ID" via HTTP Header.
-  // This value can be set from the lobby service.
-  const gameId = event.headers["x-game-id"];
-  if (!gameId) {
-    console.warn(`Invalid gameId from connection`, connectionId);
-    return { statusCode: 404, body: "Not Found" };
-  }
+  // TODO This value can be set from the lobby service.
+  const gameId = event.headers["x-game-id"] || defaultGameId;
+  // if (!gameId) {
+  //   console.warn(`Invalid gameId from connection`, connectionId);
+  //   return { statusCode: 404, body: "Not Found" };
+  // }
 
   // Do Redis works at one time.
   // 1) Auth if needed 2) Set (connectionId, gameId) 3) Post ENTER message.

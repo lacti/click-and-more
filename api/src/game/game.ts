@@ -60,6 +60,7 @@ export default class Game {
   private stageWait = async () => {
     console.info(`Game WAIT-stage`, this.gameId, this.users);
 
+    // TODO Delete users if their sockets has been gone.
     this.ticker = new Ticker(GameStage.Wait, gameWaitSeconds * 1000);
     while (this.ticker.isAlive()) {
       const requests = await this.pollRequests();
@@ -94,6 +95,7 @@ export default class Game {
   };
 
   private processEnterLeaveLoad = async (requests: GameRequest[]) => {
+    // TODO Error tolerance
     for (const request of requests) {
       switch (request.type) {
         case "enter":
@@ -117,15 +119,18 @@ export default class Game {
     const changes = requests
       .filter(e => e.type === "click")
       .filter(this.isValidUser)
-      .map(
-        ({ connectionId, y, x, value }: IGameClickRequest) =>
-          ({
-            i: this.users[connectionId].index,
-            v: value,
-            y,
-            x
-          } as TileChange)
-      );
+      .map(({ connectionId, data }: IGameClickRequest) =>
+        data.map(
+          ({ y, x, value }) =>
+            ({
+              i: this.users[connectionId].index,
+              v: value,
+              y,
+              x
+            } as TileChange)
+        )
+      )
+      .reduce((a, b) => a.concat(b), []);
     if (changes.length > 0) {
       logHook(`Game apply changes`, this.gameId, changes.length);
       this.board = applyChangesToBoard(this.board, changes);

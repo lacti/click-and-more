@@ -26,7 +26,7 @@ export const handle: APIGatewayProxyHandler = async event => {
       env.redisPassword ? `AUTH ${env.redisPassword}` : ``,
       `GET "${redisKeys.connection(connectionId)}"`
     ],
-    /^\+OK\r\n(?:\$[0-9]+\r\n(\w+)\r\n|\$-1\r\n)$/
+    /^\+OK\r\n(?:\$[0-9]+\r\n([0-9A-Za-z_\-]+)\r\n|\$-1\r\n)$/
   );
   if (!gameId) {
     console.warn(`No GameID for connection[${connectionId}]`);

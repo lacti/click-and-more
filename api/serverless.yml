@@ -43,7 +43,7 @@ custom:
     number: 7
   scripts:
     hooks:
-      "webpack:package:packExternalModules": cp html-bundle.zip .webpack/serve/
+      "webpack:package:packExternalModules": /bin/bash .prepackage.sh
 
 package:
   individually: true

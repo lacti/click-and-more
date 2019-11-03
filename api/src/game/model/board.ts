@@ -45,11 +45,16 @@ export const applyChangesToBoard = (
 export const diffBoards = (before: Board, after: Board): TileChange[] =>
   before
     .map((row, y) =>
-      row.map((oldTile, x) =>
-        tileEquals(oldTile, after[y][x]) ? undefined : { ...after[y][x], y, x }
-      )
+      row
+        .map((oldTile, x) =>
+          tileEquals(oldTile, after[y][x])
+            ? undefined
+            : { ...after[y][x], y, x }
+        )
+        .filter(Boolean)
     )
-    .reduce((a, b) => a.concat(b), []);
+    .reduce((a, b) => a.concat(b), [])
+    .filter(Boolean);
 
 export const calculateScore = (board: Board) => {
   const score: { [index: number]: { tile: number; power: number } } = {};

@@ -5,9 +5,11 @@ export interface IClientLoadRequest {
 
 export interface IClientClickRequest {
   type: "click";
-  x: number;
-  y: number;
-  value: number;
+  data: Array<{
+    x: number;
+    y: number;
+    value: number;
+  }>;
 }
 
 export type ClientRequest = IClientLoadRequest | IClientClickRequest;

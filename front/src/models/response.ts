@@ -1,4 +1,4 @@
-import { IUser, Board, TileChange } from "./domain";
+import { IUser, Board, TileChange, GameStage, GameScore } from "./domain";
 
 export interface IEnterBroadcast {
   type: "enter";
@@ -15,27 +15,24 @@ export interface ILoadResponse {
   me: IUser;
   users: IUser[];
   board: Board;
+  stage: GameStage;
+  age: number;
 }
 
 export interface IClickBroadcast {
   type: "click";
-  values: TileChange[];
+  changes: TileChange[];
 }
 
 export interface IStageBroadcsat {
   type: "stage";
-  stage: "wait" | "running" | "end";
+  stage: GameStage;
   age: number;
 }
 
 export interface IEndBroadcast {
   type: "end";
-  score: {
-    [index: number]: {
-      tile: number;
-      power: number;
-    };
-  };
+  score: GameScore;
 }
 
 export type GameResponse =
