@@ -16,7 +16,8 @@ const Tile: React.FC<{
     style={{
       backgroundColor: tile.i >= 0 ? colors[tile.i] : "transparent"
     }}
-    onClick={() => onClick(y, x)}
+    // The latency from onClick is huge.
+    onMouseDown={() => onClick(y, x)}
   >
     {tile.v}
   </td>

@@ -8,8 +8,10 @@ type ClickContext = {
   timer: NodeJS.Timer;
 };
 
-export const coalesceClick = (callback: OnTileBulkClick) => {
-  const interval = 100;
+export const coalesceClick = (
+  callback: OnTileBulkClick,
+  interval: number = 16
+) => {
   let ctx: ClickContext | null = null;
 
   const flushContext = () => {
@@ -24,6 +26,7 @@ export const coalesceClick = (callback: OnTileBulkClick) => {
   };
 
   return (y: number, x: number) => {
+    console.info(`click`, y, x);
     if (ctx !== null && Date.now() - ctx.start > interval) {
       flushContext();
     }
