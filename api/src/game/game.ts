@@ -25,12 +25,12 @@ import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
 
-const boardHeight = 20;
-const boardWidth = 20;
+const boardHeight = 8;
+const boardWidth = 8;
 
-const gameWaitSeconds = 5;
-const gameRunningSeconds = 60;
-const loopInterval = 50;
+const gameWaitSeconds = 3;
+const gameRunningSeconds = 30;
+const loopInterval = 0;
 
 export default class Game {
   public static readonly gameAliveSeconds: number =

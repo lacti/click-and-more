@@ -10,7 +10,7 @@ import {
   GameStage,
   initialContext
 } from "./models";
-import { coalesceClick } from "./events/coalesceClick";
+// import { coalesceClick } from "./events/coalesceClick";
 import TileBoard from "./components/TileBoard";
 import { ReadyStateEnum } from "react-use-websocket/dist/lib/use-websocket";
 import { logHook } from "./utils/logger";
@@ -34,6 +34,8 @@ const App: React.FC = () => {
     },
     [sendRequest, context]
   );
+  const sendClickOne = (y: number, x: number) =>
+    sendClick([{ y, x, value: 1 }]);
 
   const onResponse = useCallback(
     (response: GameResponse) =>
@@ -64,7 +66,8 @@ const App: React.FC = () => {
       <TileBoard
         board={context.board}
         colors={context.colors}
-        onClick={coalesceClick(sendClick)}
+        // onClick={coalesceClick(sendClick)}
+        onClick={sendClickOne}
       />
     </React.Fragment>
   );
