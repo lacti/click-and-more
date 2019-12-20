@@ -22,7 +22,7 @@ export const resetOwnedTiles = (board: Board, userIndex: number): Board => [
 ];
 
 export const duplicateBoard = (board: Board) => [
-  ...board.map(row => [...row.map(tile => ({ ...tile }))])
+  ...board.map(row => [...row])
 ];
 
 export const applyChangesToBoard = (
