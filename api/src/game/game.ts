@@ -9,6 +9,7 @@ import {
   calculateScore,
   IGameUser,
   newBoard,
+  placeUsersToBoard,
   resetOwnedTiles,
   TileChange
 } from "./model";
@@ -75,6 +76,8 @@ export default class Game {
       await this.ticker.checkAgeChanged(this.broadcastStage);
       await sleep(loopInterval);
     }
+
+    this.board = placeUsersToBoard(this.board, Object.values(this.users).map(x => x.index))
   };
 
   private stageRunning = async () => {
