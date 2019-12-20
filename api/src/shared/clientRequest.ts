@@ -12,10 +12,19 @@ export interface IClientClickRequest {
   }>;
 }
 
-export type ClientRequest = IClientLoadRequest | IClientClickRequest;
+export interface IClientLevelUpRequest {
+  type: "levelUp";
+  data: Array<{
+    x: number;
+    y: number;
+    value: number;
+  }>;
+}
+
+export type ClientRequest = IClientLoadRequest | IClientClickRequest | IClientLevelUpRequest;
 
 export const validateClientRequest = (request: ClientRequest) =>
   !!request &&
   !!request.type &&
   // TODO Types of message can be more generalized.
-  ["load", "click"].some(t => t === request.type);
+  ["load", "click", "levelUp"].some(t => t === request.type);

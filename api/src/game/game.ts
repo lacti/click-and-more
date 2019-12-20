@@ -1,7 +1,8 @@
 import {
   GameRequest,
   IGameClickRequest,
-  IGameConnectionIdRequest
+  IGameConnectionIdRequest,
+  IGameLevelUpRequest,
 } from "../shared/gameRequest";
 import {
   applyChangesToBoard,
@@ -130,7 +131,7 @@ export default class Game {
   };
 
   private processChanges = (requests: GameRequest[]) => {
-    const changes = requests
+    const clickChanges = requests
       .filter(e => e.type === "click")
       .filter(this.isValidUser)
       .map(({ connectionId, data }: IGameClickRequest) =>
@@ -145,6 +146,22 @@ export default class Game {
         )
       )
       .reduce((a, b) => a.concat(b), []);
+    const levelUpChanges = requests
+      .filter(e => e.type === "levelUp")
+      .filter(this.isValidUser)
+      .map(({ connectionId, data }: IGameLevelUpRequest) =>
+        data.map(
+          ({ y, x, value }) =>
+            ({
+              i: this.users[connectionId].index,
+              l: value,
+              y,
+              x
+            } as TileChange)
+        )
+      )
+      .reduce((a, b) => a.concat(b), []);
+    const changes = [...clickChanges, ...levelUpChanges];
     if (changes.length > 0) {
       logHook(`Game apply changes`, this.gameId, changes.length);
       this.board = applyChangesToBoard(this.board, changes);
