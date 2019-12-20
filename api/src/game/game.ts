@@ -25,10 +25,12 @@ import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
 
+const userCapacity = 4;
+
 const boardHeight = 8;
 const boardWidth = 8;
 
-const gameWaitSeconds = 3;
+const gameWaitSeconds = 60;
 const gameRunningSeconds = 30;
 const loopInterval = 0;
 
@@ -65,6 +67,10 @@ export default class Game {
     while (this.ticker.isAlive()) {
       const requests = await this.pollRequests();
       await this.processEnterLeaveLoad(requests);
+
+      if (Object.keys(this.users).length === userCapacity) {
+        break;
+      }
 
       await this.ticker.checkAgeChanged(this.broadcastStage);
       await sleep(loopInterval);
