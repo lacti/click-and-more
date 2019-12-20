@@ -13,7 +13,7 @@ export type TileChange = ITile & IPos;
 
 export const tileEquals = (a: ITile, b: ITile) => a.i === b.i && a.v === b.v;
 
-const noOwnerIndex = -1;
+export const noOwnerIndex = -1;
 
 export const emptyTile = (): ITile => ({
   i: noOwnerIndex,
@@ -35,7 +35,11 @@ export const updateTile = (tile: ITile, change: ITile): ITile => {
   if (newValue > 0) {
     return { i: tile.i, v: newValue, l: tile.l };
   } else if (newValue < 0) {
-    return { i: change.i, v: -newValue, l: 0 };
+    if (change.i === noOwnerIndex) {
+      return emptyTile();
+    } else {
+      return { i: change.i, v: -newValue, l: 0 };
+    }
   }
   return emptyTile();
 };

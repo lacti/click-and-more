@@ -25,6 +25,7 @@ import {
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
+import { updateGrowing } from "./system/growing";
 
 const userCapacity = 4;
 
@@ -42,6 +43,7 @@ export default class Game {
   private userSerial: number = 0;
   private users: { [connectionId: string]: IGameUser } = {};
   private board: Board;
+  private lastMillis: number;
 
   private readonly clickBroadcast: ClickBroadcast;
   private ticker: Ticker | null;
@@ -83,12 +85,15 @@ export default class Game {
   private stageRunning = async () => {
     console.info(`Game RUNNING-stage`, this.gameId, this.users);
 
+    this.lastMillis = Date.now();
+
     this.ticker = new Ticker(GameStage.Running, gameRunningSeconds * 1000);
     while (this.ticker.isAlive()) {
       const requests = await this.pollRequests();
       await this.processEnterLeaveLoad(requests);
 
       this.processChanges(requests);
+      this.update();
       this.broadcastClick();
 
       await this.ticker.checkAgeChanged(this.broadcastStage);
@@ -144,6 +149,14 @@ export default class Game {
       logHook(`Game apply changes`, this.gameId, changes.length);
       this.board = applyChangesToBoard(this.board, changes);
     }
+  };
+
+  private update = () => {
+    const now = Date.now();
+    const dt = (now - this.lastMillis) / 1000;
+    this.lastMillis = now;
+
+    this.board = updateGrowing(this.board, dt);
   };
 
   private isValidUser = ({ connectionId }: IGameConnectionIdRequest) =>
