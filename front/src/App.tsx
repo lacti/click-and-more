@@ -6,7 +6,6 @@ import {
   GameResponse,
   updateContext,
   GameRequest,
-  IClickRequest,
   GameStage,
   initialContext
 } from "./models";
@@ -37,17 +36,17 @@ const App: React.FC = () => {
       sendMessage(JSON.stringify(logHook(`Request`)(request))),
     [sendMessage]
   );
-  const sendClick = useCallback(
-    (data: IClickRequest["data"]) => {
-      if (context.stage === GameStage.Running) {
-        // data.filter();
-        sendRequest({ type: "click", data });
+  const sendClickOne = useCallback(
+    (y: number, x: number) => {
+      if (context.stage !== GameStage.Running) {
+        return;
       }
+      const v = Math.floor(context.board[y][x].v);
+      const type = v > 0 && v % 10 === 0 ? "levelUp" : "click";
+      sendRequest({ type, data: [{ y, x, value: 1 }] });
     },
     [sendRequest, context]
   );
-  const sendClickOne = (y: number, x: number) =>
-    sendClick([{ y, x, value: 1 }]);
 
   const onResponse = useCallback(
     (response: GameResponse) =>
