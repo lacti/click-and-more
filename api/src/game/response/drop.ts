@@ -3,7 +3,7 @@ import env from "../support/env";
 
 export const dropConnection = (connectionId: string) =>
   newApiGatewayManagementApi({
-    endpoint: env.webSocketEndpoint
+    endpoint: env.isOffline ? `http://localhost:3001` : env.webSocketEndpoint
   })
     .deleteConnection({
       ConnectionId: connectionId
