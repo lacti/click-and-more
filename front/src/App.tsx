@@ -17,6 +17,17 @@ import { logHook } from "./utils/logger";
 
 const webSocketUrl = process.env.REACT_APP_WEBSOCKET_URL!;
 
+// const filterLevelUp = (context: IContext) => ({
+//   value,
+//   y,
+//   x
+// }: IClickRequest["data"]) => {
+//   const tile = context.board[y][x];
+//   const v = Math.floor(tile.v);
+//   if (tile.i === context.me && v % 10 === 0) {
+//   }
+// };
+
 const App: React.FC = () => {
   const [socketUrl] = useState(webSocketUrl);
   const [context, setContext] = useState<IContext>(initialContext);
@@ -29,6 +40,7 @@ const App: React.FC = () => {
   const sendClick = useCallback(
     (data: IClickRequest["data"]) => {
       if (context.stage === GameStage.Running) {
+        // data.filter();
         sendRequest({ type: "click", data });
       }
     },

@@ -13,4 +13,13 @@ export interface IClickRequest {
   >;
 }
 
-export type GameRequest = ILoadRequest | IClickRequest;
+export interface ILevelUpRequest {
+  type: "levelUp";
+  data: Array<
+    {
+      value: number;
+    } & IPos
+  >;
+}
+
+export type GameRequest = ILoadRequest | IClickRequest | ILevelUpRequest;
