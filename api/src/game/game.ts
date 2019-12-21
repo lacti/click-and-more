@@ -12,8 +12,17 @@ import {
   newBoard,
   newTileChange,
   placeUsersToBoard,
-  resetOwnedTiles
+  resetOwnedTiles,
+  withBoardValidator
 } from "./model";
+import {
+  boardHeight,
+  boardWidth,
+  gameRunningSeconds,
+  gameWaitSeconds,
+  loopInterval,
+  userCapacity
+} from "./model/constraints";
 import { GameStage } from "./model/stage";
 import {
   broadcastEnd,
@@ -24,20 +33,10 @@ import {
   replyLoad
 } from "./response";
 import { dropConnection } from "./response/drop";
-import env from "./support/env";
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
 import { updateGrowing } from "./system/growing";
-
-const userCapacity = env.isOffline ? 1 : 6;
-
-const boardHeight = 11;
-const boardWidth = 11;
-
-const gameWaitSeconds = 30;
-const gameRunningSeconds = 60;
-const loopInterval = 0;
 
 export default class Game {
   public static readonly gameAliveSeconds: number =
@@ -157,6 +156,7 @@ export default class Game {
   };
 
   private processChanges = (requests: GameRequest[]) => {
+    const { validateTileChange } = withBoardValidator(this.board);
     const clickChanges = requests
       .filter(e => e.type === "click")
       .filter(this.isValidUser)
@@ -170,7 +170,8 @@ export default class Game {
           })
         )
       )
-      .reduce((a, b) => a.concat(b), []);
+      .reduce((a, b) => a.concat(b), [])
+      .filter(validateTileChange);
     const levelUpChanges = requests
       .filter(e => e.type === "levelUp")
       .filter(this.isValidUser)
@@ -184,7 +185,8 @@ export default class Game {
           })
         )
       )
-      .reduce((a, b) => a.concat(b), []);
+      .reduce((a, b) => a.concat(b), [])
+      .filter(validateTileChange);
     const changes = [...clickChanges, ...levelUpChanges];
     if (changes.length > 0) {
       logHook(`Game apply changes`, this.gameId, JSON.stringify(changes));

@@ -1,3 +1,4 @@
+import { boardHeight, boardWidth } from "./constraints";
 import { emptyTile, IPos, ITile, TileChange, updateTile } from "./tile";
 import { isValidUser } from "./user";
 
@@ -99,4 +100,22 @@ export const calculateScore = (board: Board) => {
       })
   );
   return score;
+};
+
+export const withBoardValidator = (board: Board) => {
+  const validateTileChange = ({ y, x, i }: TileChange) => {
+    // If that tile is mine.
+    if (board[y][x].i === i) {
+      return true;
+    }
+    // Or that tile is near by my tile.
+    const nearBy = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+      .map(([dy, dx]) => [y + dy, x + dx])
+      .filter(
+        ([ny, nx]) => ny >= 0 && ny < boardHeight && nx >= 0 && nx < boardWidth
+      )
+      .some(([ny, nx]) => board[ny][nx].i === i);
+    return nearBy;
+  };
+  return { validateTileChange };
 };
