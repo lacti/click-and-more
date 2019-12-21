@@ -3,7 +3,7 @@ import mem from "mem";
 import env from "../../support/env";
 
 const apimgmt = new ApiGatewayManagementApi({
-  endpoint: env.webSocketEndpoint
+  endpoint: env.isOffline ? `http://localhost:3001` : env.webSocketEndpoint
 });
 
 export const reply = mem(

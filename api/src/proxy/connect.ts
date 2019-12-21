@@ -1,13 +1,13 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 import { Lambda } from "aws-sdk";
 import { IGameActorEvent } from "../shared/actorRequest";
+import { defaultGameId } from "../shared/constants";
 import redisKeys from "../shared/redisKeys";
 import { encodeMessage } from "./support/encoder";
 import env from "./support/env";
 import { redisSend } from "./support/redis";
 
 const expirationSeconds = 300;
-const defaultGameId = "de07b0bb-0061-4d8c-8077-178a6822320c";
 
 export const handle: APIGatewayProxyHandler = async event => {
   const connectionId = event.requestContext.connectionId;
@@ -37,7 +37,9 @@ export const handle: APIGatewayProxyHandler = async event => {
   ]);
 
   // Start a new Lambda to process game messages.
-  await new Lambda()
+  await new Lambda({
+    endpoint: env.isOffline ? `http://localhost:3000` : undefined
+  })
     .invoke({
       FunctionName: env.gameActorLambdaName,
       InvocationType: "Event",
@@ -48,7 +50,6 @@ export const handle: APIGatewayProxyHandler = async event => {
       } as IGameActorEvent)
     })
     .promise();
-
   console.info(`Game logged`, gameId, connectionId);
   return {
     statusCode: 200,

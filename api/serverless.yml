@@ -5,6 +5,7 @@ plugins:
   - serverless-plugin-scripts
   - serverless-webpack
   - serverless-prune-plugin
+  - serverless-offline
 
 provider:
   name: aws

@@ -5,7 +5,8 @@
   "main": "handler.ts",
   "scripts": {
     "build": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless package",
-    "deploy": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless deploy"
+    "deploy": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless deploy",
+    "start": "sls offline"
   },
   "dependencies": {
     "adm-zip": "^0.4.13",
