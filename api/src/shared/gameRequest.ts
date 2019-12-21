@@ -1,4 +1,4 @@
-import { IClientClickRequest, IClientLoadRequest } from "./clientRequest";
+import { IClientClickRequest, IClientLevelUpRequest, IClientLoadRequest } from "./clientRequest";
 
 export interface IGameConnectionIdRequest {
   connectionId: string;
@@ -20,8 +20,14 @@ export interface IGameClickRequest
   extends IClientClickRequest,
     IGameConnectionIdRequest {}
 
+export interface IGameLevelUpRequest
+  extends IClientLevelUpRequest,
+    IGameConnectionIdRequest {}
+
 export type GameRequest =
   | IGameEnterRequest
   | IGameLeaveRequest
   | IGameLoadRequest
-  | IGameClickRequest;
+  | IGameClickRequest
+  | IGameLevelUpRequest
+  ;

@@ -1,4 +1,4 @@
-import { emptyTile, ITile, TileChange, tileEquals, updateTile } from "./tile";
+import { emptyTile, IPos, ITile, TileChange, tileEquals, updateTile } from "./tile";
 import { isValidUser } from "./user";
 
 export type BoardRow = ITile[];
@@ -21,9 +21,36 @@ export const resetOwnedTiles = (board: Board, userIndex: number): Board => [
   ])
 ];
 
-export const duplicateBoard = (board: Board) => [
-  ...board.map(row => [...row.map(tile => ({ ...tile }))])
-];
+export const duplicateBoard = (board: Board) => board.map(row => [...row]);
+
+const getUserPositions = (board: Board): { [userIndex: number]: IPos } => {
+  const maxX = board[0].length - 1;
+  const maxY = board.length - 1;
+  return {
+    1: {x: 0, y: 0},
+    2: {x: 0, y: maxY},
+    3: {x: maxX, y: 0},
+    4: {x: maxX, y: maxY},
+  };
+};
+
+export const placeUsersToBoard = (
+  board: Board,
+  userIndices: number[],
+): Board => {
+  const userPositions = getUserPositions(board);
+
+  const copiedBoard = duplicateBoard(board);
+  userIndices.forEach(userIndex => {
+    const userPosition = userPositions[userIndex];
+    copiedBoard[userPosition.y][userPosition.x] = {
+      i: userIndex,
+      v: 0,
+      l: 1,
+    };
+  });
+  return copiedBoard;
+};
 
 export const applyChangesToBoard = (
   board: Board,

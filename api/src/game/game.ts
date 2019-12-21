@@ -1,7 +1,8 @@
 import {
   GameRequest,
   IGameClickRequest,
-  IGameConnectionIdRequest
+  IGameConnectionIdRequest,
+  IGameLevelUpRequest,
 } from "../shared/gameRequest";
 import {
   applyChangesToBoard,
@@ -9,6 +10,7 @@ import {
   calculateScore,
   IGameUser,
   newBoard,
+  placeUsersToBoard,
   resetOwnedTiles,
   TileChange
 } from "./model";
@@ -24,11 +26,14 @@ import {
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
+import { updateGrowing } from "./system/growing";
+
+const userCapacity = 4;
 
 const boardHeight = 8;
 const boardWidth = 8;
 
-const gameWaitSeconds = 3;
+const gameWaitSeconds = 60;
 const gameRunningSeconds = 30;
 const loopInterval = 0;
 
@@ -39,6 +44,7 @@ export default class Game {
   private userSerial: number = 0;
   private users: { [connectionId: string]: IGameUser } = {};
   private board: Board;
+  private lastMillis: number;
 
   private readonly clickBroadcast: ClickBroadcast;
   private ticker: Ticker | null;
@@ -66,13 +72,21 @@ export default class Game {
       const requests = await this.pollRequests();
       await this.processEnterLeaveLoad(requests);
 
+      if (Object.keys(this.users).length === userCapacity) {
+        break;
+      }
+
       await this.ticker.checkAgeChanged(this.broadcastStage);
       await sleep(loopInterval);
     }
+
+    this.board = placeUsersToBoard(this.board, Object.values(this.users).map(x => x.index))
   };
 
   private stageRunning = async () => {
     console.info(`Game RUNNING-stage`, this.gameId, this.users);
+
+    this.lastMillis = Date.now();
 
     this.ticker = new Ticker(GameStage.Running, gameRunningSeconds * 1000);
     while (this.ticker.isAlive()) {
@@ -80,6 +94,7 @@ export default class Game {
       await this.processEnterLeaveLoad(requests);
 
       this.processChanges(requests);
+      this.update();
       this.broadcastClick();
 
       await this.ticker.checkAgeChanged(this.broadcastStage);
@@ -116,7 +131,7 @@ export default class Game {
   };
 
   private processChanges = (requests: GameRequest[]) => {
-    const changes = requests
+    const clickChanges = requests
       .filter(e => e.type === "click")
       .filter(this.isValidUser)
       .map(({ connectionId, data }: IGameClickRequest) =>
@@ -131,10 +146,34 @@ export default class Game {
         )
       )
       .reduce((a, b) => a.concat(b), []);
+    const levelUpChanges = requests
+      .filter(e => e.type === "levelUp")
+      .filter(this.isValidUser)
+      .map(({ connectionId, data }: IGameLevelUpRequest) =>
+        data.map(
+          ({ y, x, value }) =>
+            ({
+              i: this.users[connectionId].index,
+              l: value,
+              y,
+              x
+            } as TileChange)
+        )
+      )
+      .reduce((a, b) => a.concat(b), []);
+    const changes = [...clickChanges, ...levelUpChanges];
     if (changes.length > 0) {
       logHook(`Game apply changes`, this.gameId, changes.length);
       this.board = applyChangesToBoard(this.board, changes);
     }
+  };
+
+  private update = () => {
+    const now = Date.now();
+    const dt = (now - this.lastMillis) / 1000;
+    this.lastMillis = now;
+
+    this.board = updateGrowing(this.board, dt);
   };
 
   private isValidUser = ({ connectionId }: IGameConnectionIdRequest) =>
