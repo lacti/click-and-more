@@ -41,14 +41,19 @@ export class ClickBroadcast {
     this.lastBoard = newBoard;
 
     // Skip if there is no changes.
-    const changes = diffBoards(oldBoard, newBoard);
+    const changes = diffBoards(
+      oldBoard,
+      newBoard,
+      (a, b) =>
+        a.i === b.i && a.l === b.l && Math.floor(a.v) === Math.floor(b.v)
+    );
     if (changes.length === 0) {
-      console.debug(`Click broadcast`, `no changes`);
+      // console.debug(`Click broadcast`, `no changes`);
       return {};
     }
 
     // Send current changes.
-    console.debug(`Click broadcast`, `send changes`, changes.length);
+    console.debug(`Click broadcast`, `send changes`, JSON.stringify(changes));
     this.sending = true;
     const result = await broadcast<IClickBroadcast>(connectionIds, {
       type: "click",

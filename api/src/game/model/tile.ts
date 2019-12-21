@@ -11,15 +11,21 @@ export interface IPos {
 
 export type TileChange = ITile & IPos;
 
-export const tileEquals = (a: ITile, b: ITile) => a.i === b.i && a.v === b.v;
-
 export const noOwnerIndex = -1;
 
 export const emptyTile = (): ITile => ({
   i: noOwnerIndex,
   v: 0,
-  l: 0,
+  l: 0
 });
+
+export const newTileChange = ({
+  y,
+  x,
+  i = noOwnerIndex,
+  v = 0,
+  l = 0
+}: IPos & Partial<ITile>): TileChange => ({ y, x, i, v, l });
 
 export const isEmptyTile = ({ i }: ITile) => i === noOwnerIndex;
 

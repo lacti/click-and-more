@@ -2,7 +2,7 @@ import {
   GameRequest,
   IGameClickRequest,
   IGameConnectionIdRequest,
-  IGameLevelUpRequest,
+  IGameLevelUpRequest
 } from "../shared/gameRequest";
 import {
   applyChangesToBoard,
@@ -10,9 +10,9 @@ import {
   calculateScore,
   IGameUser,
   newBoard,
+  newTileChange,
   placeUsersToBoard,
-  resetOwnedTiles,
-  TileChange
+  resetOwnedTiles
 } from "./model";
 import { GameStage } from "./model/stage";
 import {
@@ -23,12 +23,13 @@ import {
   ClickBroadcast,
   replyLoad
 } from "./response";
+import env from "./support/env";
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
 import { updateGrowing } from "./system/growing";
 
-const userCapacity = 4;
+const userCapacity = env.isOffline ? 1 : 4;
 
 const boardHeight = 8;
 const boardWidth = 8;
@@ -72,6 +73,7 @@ export default class Game {
       const requests = await this.pollRequests();
       await this.processEnterLeaveLoad(requests);
 
+      console.info(`Game WAIT-user`, Object.keys(this.users).length);
       if (Object.keys(this.users).length === userCapacity) {
         break;
       }
@@ -80,7 +82,10 @@ export default class Game {
       await sleep(loopInterval);
     }
 
-    this.board = placeUsersToBoard(this.board, Object.values(this.users).map(x => x.index))
+    this.board = placeUsersToBoard(
+      this.board,
+      Object.values(this.users).map(x => x.index)
+    );
   };
 
   private stageRunning = async () => {
@@ -135,14 +140,13 @@ export default class Game {
       .filter(e => e.type === "click")
       .filter(this.isValidUser)
       .map(({ connectionId, data }: IGameClickRequest) =>
-        data.map(
-          ({ y, x, value }) =>
-            ({
-              i: this.users[connectionId].index,
-              v: value,
-              y,
-              x
-            } as TileChange)
+        data.map(({ y, x, value }) =>
+          newTileChange({
+            i: this.users[connectionId].index,
+            v: value,
+            y,
+            x
+          })
         )
       )
       .reduce((a, b) => a.concat(b), []);
@@ -150,20 +154,19 @@ export default class Game {
       .filter(e => e.type === "levelUp")
       .filter(this.isValidUser)
       .map(({ connectionId, data }: IGameLevelUpRequest) =>
-        data.map(
-          ({ y, x, value }) =>
-            ({
-              i: this.users[connectionId].index,
-              l: value,
-              y,
-              x
-            } as TileChange)
+        data.map(({ y, x, value }) =>
+          newTileChange({
+            i: this.users[connectionId].index,
+            l: value,
+            y,
+            x
+          })
         )
       )
       .reduce((a, b) => a.concat(b), []);
     const changes = [...clickChanges, ...levelUpChanges];
     if (changes.length > 0) {
-      logHook(`Game apply changes`, this.gameId, changes.length);
+      logHook(`Game apply changes`, this.gameId, JSON.stringify(changes));
       this.board = applyChangesToBoard(this.board, changes);
     }
   };

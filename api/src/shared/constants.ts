@@ -1,1 +1,1 @@
-export const defaultGameId = "de07b0bb-0061-4d8c-8077-178a6822320c";
+export const defaultGameId = "74cc6767-67d7-4275-90ab-a039a2ac8cc1";

@@ -1,4 +1,4 @@
-import { emptyTile, IPos, ITile, TileChange, tileEquals, updateTile } from "./tile";
+import { emptyTile, IPos, ITile, TileChange, updateTile } from "./tile";
 import { isValidUser } from "./user";
 
 export type BoardRow = ITile[];
@@ -27,16 +27,16 @@ const getUserPositions = (board: Board): { [userIndex: number]: IPos } => {
   const maxX = board[0].length - 1;
   const maxY = board.length - 1;
   return {
-    1: {x: 0, y: 0},
-    2: {x: 0, y: maxY},
-    3: {x: maxX, y: 0},
-    4: {x: maxX, y: maxY},
+    1: { x: 0, y: 0 },
+    2: { x: 0, y: maxY },
+    3: { x: maxX, y: 0 },
+    4: { x: maxX, y: maxY }
   };
 };
 
 export const placeUsersToBoard = (
   board: Board,
-  userIndices: number[],
+  userIndices: number[]
 ): Board => {
   const userPositions = getUserPositions(board);
 
@@ -46,7 +46,7 @@ export const placeUsersToBoard = (
     copiedBoard[userPosition.y][userPosition.x] = {
       i: userIndex,
       v: 0,
-      l: 1,
+      l: 1
     };
   });
   return copiedBoard;
@@ -69,14 +69,16 @@ export const applyChangesToBoard = (
   return copiedBoard;
 };
 
-export const diffBoards = (before: Board, after: Board): TileChange[] =>
+export const diffBoards = (
+  before: Board,
+  after: Board,
+  equals: (a: ITile, b: ITile) => boolean
+): TileChange[] =>
   before
     .map((row, y) =>
       row
         .map((oldTile, x) =>
-          tileEquals(oldTile, after[y][x])
-            ? undefined
-            : { ...after[y][x], y, x }
+          equals(oldTile, after[y][x]) ? undefined : { ...after[y][x], y, x }
         )
         .filter(Boolean)
     )
