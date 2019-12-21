@@ -9,6 +9,7 @@
     "start": "sls offline"
   },
   "dependencies": {
+    "@yingyeothon/aws-apigateway-management-api": "^2.536.0",
     "adm-zip": "^0.4.13",
     "ioredis": "^4.14.1",
     "mem": "^5.1.1",

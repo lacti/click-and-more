@@ -23,6 +23,7 @@ import {
   ClickBroadcast,
   replyLoad
 } from "./response";
+import { dropConnection } from "./response/drop";
 import env from "./support/env";
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
@@ -92,11 +93,10 @@ export default class Game {
     console.info(`Game RUNNING-stage`, this.gameId, this.users);
 
     this.lastMillis = Date.now();
-
     this.ticker = new Ticker(GameStage.Running, gameRunningSeconds * 1000);
     while (this.ticker.isAlive()) {
       const requests = await this.pollRequests();
-      await this.processEnterLeaveLoad(requests);
+      await this.processLeaveOnly(requests);
 
       this.processChanges(requests);
       this.update();
@@ -111,7 +111,8 @@ export default class Game {
     console.info(`Game END-stage`, this.gameId);
     await broadcastEnd(Object.keys(this.users), calculateScore(this.board));
 
-    // TODO disconnect all user connections.
+    await Promise.all(Object.keys(this.users).map(dropConnection));
+    this.users = {};
   };
 
   private processEnterLeaveLoad = async (requests: GameRequest[]) => {
@@ -130,6 +131,26 @@ export default class Game {
           if (this.isValidUser(request)) {
             await this.onLoad(request);
           }
+          break;
+      }
+    }
+  };
+
+  private processLeaveOnly = async (requests: GameRequest[]) => {
+    // TODO Error tolerance
+    for (const request of requests) {
+      switch (request.type) {
+        case "leave":
+          if (this.isValidUser(request)) {
+            await this.onLeave(request);
+          }
+          break;
+        default:
+          console.warn(
+            `Disconnect the user connecting after game starts`,
+            request
+          );
+          await dropConnection(request.connectionId);
           break;
       }
     }
