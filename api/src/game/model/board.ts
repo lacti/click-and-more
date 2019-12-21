@@ -29,9 +29,9 @@ const getUserPositions = (board: Board): { [userIndex: number]: IPos } => {
   const maxY = board.length - 1;
   return {
     1: { x: 0, y: 0 },
-    2: { x: 0, y: maxY },
-    3: { x: maxX, y: 0 },
-    4: { x: maxX, y: maxY },
+    2: { x: maxX, y: maxY },
+    3: { x: 0, y: maxY },
+    4: { x: maxX, y: 0 },
     5: { x: Math.floor(maxX / 2), y: 0 },
     6: { x: Math.floor(maxX / 2), y: maxY }
   };
@@ -46,6 +46,9 @@ export const placeUsersToBoard = (
   const copiedBoard = duplicateBoard(board);
   userIndices.forEach(userIndex => {
     const userPosition = userPositions[userIndex];
+    if (!userPosition) {
+      return;
+    }
     copiedBoard[userPosition.y][userPosition.x] = {
       i: userIndex,
       v: 0,

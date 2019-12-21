@@ -21,27 +21,40 @@ export const handle: APIGatewayProxyHandler = async event => {
   }
 
   // Read gameId related this connectionId.
-  const [gameId] = await redisSend(
+  const response = await redisSend(
     [
-      env.redisPassword ? `AUTH ${env.redisPassword}` : ``,
-      `GET "${redisKeys.connection(connectionId)}"`
+      env.redisPassword ? [`AUTH`, env.redisPassword] : undefined,
+      [`GET`, `"${redisKeys.connection(connectionId)}"`]
     ],
-    /^\+OK\r\n(?:\$[0-9]+\r\n([0-9A-Za-z_\-]+)\r\n|\$-1\r\n)$/
+    m =>
+      (env.redisPassword ? m.check("+OK\r\n") : m) // auth
+        .capture("\r\n") // length
+        .capture("\r\n") // gameId
   );
+  console.info(`Redis response`, response);
+
+  const gameId = response.slice(-1)[0];
+  console.info(`Game id`, connectionId, gameId);
   if (!gameId) {
     console.warn(`No GameID for connection[${connectionId}]`);
     return { statusCode: 404, body: "Not Found" };
   }
 
   // Encode a game message and send it to Redis Q.
-  await redisSend([
-    `RPUSH "${redisKeys.queue(gameId)}" ${encodeMessage({
-      ...request,
-      connectionId
-    })}`
-  ]);
-
-  console.info(`Game message sent`, gameId, connectionId, request);
+  const sent = await redisSend(
+    [
+      [
+        `RPUSH`,
+        `"${redisKeys.queue(gameId)}"`,
+        encodeMessage({
+          ...request,
+          connectionId
+        })
+      ]
+    ],
+    m => m.capture("\r\n")
+  );
+  console.info(`Game message sent`, gameId, connectionId, request, sent);
   return {
     statusCode: 200,
     body: "OK"

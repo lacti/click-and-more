@@ -6,10 +6,11 @@
   "scripts": {
     "build": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless package",
     "deploy": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless deploy",
-    "start": "sls offline"
+    "start": "REDIS_HOST=\"localhost\" REDIS_PASSWORD=\"\" sls offline"
   },
   "dependencies": {
     "@yingyeothon/aws-apigateway-management-api": "^2.536.0",
+    "@yingyeothon/naive-socket": "^0.2.1",
     "adm-zip": "^0.4.13",
     "ioredis": "^4.14.1",
     "mem": "^5.1.1",

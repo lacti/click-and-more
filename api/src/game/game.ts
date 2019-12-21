@@ -73,7 +73,6 @@ export default class Game {
       const requests = await this.pollRequests();
       await this.processEnterLeaveLoad(requests);
 
-      console.info(`Game WAIT-user`, Object.keys(this.users).length);
       if (Object.keys(this.users).length === userCapacity) {
         break;
       }

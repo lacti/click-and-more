@@ -25,16 +25,30 @@ export const handle: APIGatewayProxyHandler = async event => {
 
   // Do Redis works at one time.
   // 1) Auth if needed 2) Set (connectionId, gameId) 3) Post ENTER message.
-  await redisSend([
-    env.redisPassword ? `AUTH ${env.redisPassword}` : ``,
-    `SETEX "${redisKeys.connection(
-      connectionId
-    )}" ${expirationSeconds} "${gameId}"`,
-    `RPUSH "${redisKeys.queue(gameId)}" ${encodeMessage({
-      type: "enter",
-      connectionId
-    })}`
-  ]);
+  const redisResponse = await redisSend(
+    [
+      env.redisPassword ? [`AUTH`, env.redisPassword] : undefined,
+      [
+        `SETEX`,
+        `"${redisKeys.connection(connectionId)}"`,
+        expirationSeconds.toString(),
+        gameId
+      ],
+      [
+        `RPUSH`,
+        `"${redisKeys.queue(gameId)}"`,
+        encodeMessage({
+          type: "enter",
+          connectionId
+        })
+      ]
+    ],
+    m =>
+      (env.redisPassword ? m.check("+OK\r\n") : m)
+        .capture("\r\n")
+        .capture("\r\n")
+  );
+  console.info(`Redis response`, redisResponse);
 
   // Start a new Lambda to process game messages.
   await new Lambda({

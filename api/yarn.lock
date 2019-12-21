@@ -992,6 +992,11 @@
   resolved "https://registry.yarnpkg.com/@yingyeothon/aws-apigateway-management-api/-/aws-apigateway-management-api-2.536.0.tgz#97bb4d4d7e5ea5b86a4d0c6f2c6b2899be143798"
   integrity sha512-cZLw60f3Vrrt86oyHwohXsBU9dK84l/BHnVv8rkAd87a1gfhiIP4XP+/jTSXohbb7KkKRbuhf9HLLa1cqi3Szw==
 
+"@yingyeothon/naive-socket@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@yingyeothon/naive-socket/-/naive-socket-0.2.1.tgz#81c168fb308a98bc5247dacae37b6b068eb98365"
+  integrity sha512-qMhXWxuRzTzmLNmndBjkU5nUEZ7gCsy07Phc4zleWJYx9OcE4SXWzOh+azWmMRwTlcoGltqJoFjczBb783DifQ==
+
 abab@^2.0.0:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/abab/-/abab-2.0.2.tgz#a2fba1b122c69a85caa02d10f9270c7219709a9d"
