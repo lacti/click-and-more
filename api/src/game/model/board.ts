@@ -31,7 +31,9 @@ const getUserPositions = (board: Board): { [userIndex: number]: IPos } => {
     1: { x: 0, y: 0 },
     2: { x: 0, y: maxY },
     3: { x: maxX, y: 0 },
-    4: { x: maxX, y: maxY }
+    4: { x: maxX, y: maxY },
+    5: { x: Math.floor(maxX / 2), y: 0 },
+    6: { x: Math.floor(maxX / 2), y: maxY }
   };
 };
 
