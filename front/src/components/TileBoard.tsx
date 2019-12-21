@@ -6,8 +6,9 @@ import TileRow from "./TileRow";
 const TileBoard: React.FC<{
   board: Board;
   colors: ColorMap;
+  me: number;
   onClick: OnTileClick;
-}> = ({ board, colors, onClick }) => (
+}> = ({ board, colors, me, onClick }) => (
   <table>
     <tbody>
       {board.map((row, y) => (
@@ -16,6 +17,7 @@ const TileBoard: React.FC<{
           row={row}
           y={y}
           colors={colors}
+          me={me}
           onClick={onClick}
         />
       ))}

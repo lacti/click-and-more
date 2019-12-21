@@ -8,13 +8,15 @@ const Tile: React.FC<{
   x: number;
   y: number;
   colors: ColorMap;
+  me: number;
   onClick: OnTileClick;
-}> = React.memo(({ tile, x, y, colors, onClick }) => (
+}> = React.memo(({ tile, x, y, colors, me, onClick }) => (
   <td
     className="tile"
     key={`col_${y}_${x}`}
     style={{
-      backgroundColor: tile.i >= 0 ? colors[tile.i] : "transparent"
+      backgroundColor: tile.i >= 0 ? colors[tile.i] : "transparent",
+      fontWeight: tile.i === me ? `bold` : `normal`
     }}
     // The latency from onClick is huge.
     onMouseDown={() => onClick(y, x)}

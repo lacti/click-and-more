@@ -78,6 +78,7 @@ const App: React.FC = () => {
       <TileBoard
         board={context.board}
         colors={context.colors}
+        me={context.me}
         // onClick={coalesceClick(sendClick)}
         onClick={sendClickOne}
       />

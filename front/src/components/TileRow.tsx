@@ -6,8 +6,9 @@ const TileRow: React.FC<{
   row: ITile[];
   y: number;
   colors: ColorMap;
+  me: number;
   onClick: OnTileClick;
-}> = React.memo(({ row, y, colors, onClick }) => (
+}> = React.memo(({ row, y, colors, me, onClick }) => (
   <tr>
     {row.map((tile, x) => (
       <Tile
@@ -16,6 +17,7 @@ const TileRow: React.FC<{
         y={y}
         x={x}
         colors={colors}
+        me={me}
         onClick={onClick}
       />
     ))}
