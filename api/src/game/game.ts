@@ -95,7 +95,8 @@ export default class Game {
     this.ticker = new Ticker(GameStage.Running, gameRunningSeconds * 1000);
     while (this.ticker.isAlive()) {
       const requests = await this.pollRequests();
-      await this.processLeaveOnly(requests);
+      // await this.processLeaveOnly(requests);
+      await this.processEnterLeaveLoad(requests);
 
       this.processChanges(requests);
       this.update();
@@ -135,25 +136,25 @@ export default class Game {
     }
   };
 
-  private processLeaveOnly = async (requests: GameRequest[]) => {
-    // TODO Error tolerance
-    for (const request of requests) {
-      switch (request.type) {
-        case "leave":
-          if (this.isValidUser(request)) {
-            await this.onLeave(request);
-          }
-          break;
-        default:
-          console.warn(
-            `Disconnect the user connecting after game starts`,
-            request
-          );
-          await dropConnection(request.connectionId);
-          break;
-      }
-    }
-  };
+  // private processLeaveOnly = async (requests: GameRequest[]) => {
+  //   // TODO Error tolerance
+  //   for (const request of requests) {
+  //     switch (request.type) {
+  //       case "leave":
+  //         if (this.isValidUser(request)) {
+  //           await this.onLeave(request);
+  //         }
+  //         break;
+  //       default:
+  //         console.warn(
+  //           `Disconnect the user connecting after game starts`,
+  //           request
+  //         );
+  //         await dropConnection(request.connectionId);
+  //         break;
+  //     }
+  //   }
+  // };
 
   private processChanges = (requests: GameRequest[]) => {
     const { validateTileChange } = withBoardValidator(this.board);

@@ -17,7 +17,7 @@ export const handle: APIGatewayProxyHandler = async event => {
 
   // A client should send a "X-GAME-ID" via HTTP Header.
   // TODO This value can be set from the lobby service.
-  const gameId = event.headers["x-game-id"] || defaultGameId;
+  const gameId = event.headers["x-game-id"] || defaultGameId();
   // if (!gameId) {
   //   console.warn(`Invalid gameId from connection`, connectionId);
   //   return { statusCode: 404, body: "Not Found" };
