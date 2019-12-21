@@ -30,13 +30,13 @@ import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
 import { updateGrowing } from "./system/growing";
 
-const userCapacity = env.isOffline ? 1 : 4;
+const userCapacity = env.isOffline ? 1 : 6;
 
-const boardHeight = 8;
-const boardWidth = 8;
+const boardHeight = 11;
+const boardWidth = 11;
 
-const gameWaitSeconds = 60;
-const gameRunningSeconds = 30;
+const gameWaitSeconds = 30;
+const gameRunningSeconds = 60;
 const loopInterval = 0;
 
 export default class Game {
