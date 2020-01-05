@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "start:local": "REACT_APP_WEBSOCKET_URL=ws://localhost:3001 react-scripts start",
+    "start:local": "cross-env REACT_APP_WEBSOCKET_URL=ws://localhost:3001 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "prebundle": "find build -name '*.map' -exec rm -f {} \\; && rm -f  ../api/html-bundle.zip",
@@ -36,5 +36,7 @@
       "last 1 safari version"
     ]
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "cross-env": "^6.0.3"
+  }
 }

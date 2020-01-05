@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless package",
     "deploy": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless deploy",
-    "start": "REDIS_HOST=\"localhost\" REDIS_PASSWORD=\"\" sls offline"
+    "start": "cross-env REDIS_HOST=\"localhost\" REDIS_PASSWORD=\"\" sls offline"
   },
   "dependencies": {
     "@yingyeothon/aws-apigateway-management-api": "^2.536.0",
@@ -29,6 +29,7 @@
     "@types/uuid": "^3.4.5",
     "aws-sdk": "2.488.0",
     "copy-webpack-plugin": "^5.0.4",
+    "cross-env": "^6.0.3",
     "jest": "^24.9.0",
     "prettier": "^1.18.2",
     "serverless": "^1.56.1",
