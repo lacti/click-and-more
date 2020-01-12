@@ -1,9 +1,17 @@
+import actorRedisPush from "@yingyeothon/actor-system-redis-support/lib/queue/push";
+import actorEnqueue from "@yingyeothon/actor-system/lib/actor/enqueue";
+import { ConsoleLogger } from "@yingyeothon/logger";
+import redisConnect from "@yingyeothon/naive-redis/lib/connection";
+import redisGet from "@yingyeothon/naive-redis/lib/get";
 import { APIGatewayProxyHandler } from "aws-lambda";
 import { ClientRequest, validateClientRequest } from "../shared/clientRequest";
-import redisKeys from "../shared/redisKeys";
-import { encodeMessage } from "./support/encoder";
 import env from "./support/env";
-import { redisSend } from "./support/redis";
+
+const logger = new ConsoleLogger(`debug`);
+const redisConnection = redisConnect({
+  host: env.redisHost,
+  password: env.redisPassword
+});
 
 export const handle: APIGatewayProxyHandler = async event => {
   const connectionId = event.requestContext.connectionId;
@@ -21,19 +29,10 @@ export const handle: APIGatewayProxyHandler = async event => {
   }
 
   // Read gameId related this connectionId.
-  const response = await redisSend(
-    [
-      env.redisPassword ? [`AUTH`, env.redisPassword] : undefined,
-      [`GET`, `"${redisKeys.connection(connectionId)}"`]
-    ],
-    m =>
-      (env.redisPassword ? m.check("+OK\r\n") : m) // auth
-        .capture("\r\n") // length
-        .capture("\r\n") // gameId
+  const gameId: string | null = await redisGet(
+    redisConnection,
+    env.connectionGameIdPrefix + connectionId
   );
-  console.info(`Redis response`, response);
-
-  const gameId = response.slice(-1)[0];
   console.info(`Game id`, connectionId, gameId);
   if (!gameId) {
     console.warn(`No GameID for connection[${connectionId}]`);
@@ -41,20 +40,15 @@ export const handle: APIGatewayProxyHandler = async event => {
   }
 
   // Encode a game message and send it to Redis Q.
-  const sent = await redisSend(
-    [
-      [
-        `RPUSH`,
-        `"${redisKeys.queue(gameId)}"`,
-        encodeMessage({
-          ...request,
-          connectionId
-        })
-      ]
-    ],
-    m => m.capture("\r\n")
+  await actorEnqueue(
+    {
+      id: gameId,
+      queue: actorRedisPush({ connection: redisConnection, logger }),
+      logger
+    },
+    { item: { ...request, connectionId } }
   );
-  console.info(`Game message sent`, gameId, connectionId, request, sent);
+  console.info(`Game message sent`, connectionId, gameId, request);
   return {
     statusCode: 200,
     body: "OK"

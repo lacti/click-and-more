@@ -9,13 +9,14 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs10.x
+  runtime: nodejs12.x
   region: ap-northeast-2
   stage: ${env:STAGE}
   tracing:
     apiGateway: true
     lambda: true
   apiGateway:
+    minimumCompressionSize: 1024
     binaryMediaTypes:
       - "image/*"
   environment:
@@ -24,6 +25,7 @@ provider:
     REDIS_PASSWORD: ${env:REDIS_PASSWORD}
     WS_ENDPOINT: ${env:WS_ENDPOINT}
     GAME_ACTOR_LAMBDA_NAME: ${self:custom.gameActorLambdaName}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
   iamRoleStatements:
     - Effect: Allow
       Action:
