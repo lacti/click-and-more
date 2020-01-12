@@ -1,6 +1,8 @@
 export interface ITile {
   i: number;
   v: number;
+  l: number;
+  p: boolean;
 }
 
 export type BoardRow = ITile[];
