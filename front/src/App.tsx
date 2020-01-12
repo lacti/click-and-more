@@ -41,8 +41,8 @@ const App: React.FC = () => {
       if (context.stage !== GameStage.Running) {
         return;
       }
-      const v = Math.floor(context.board[y][x].v);
-      const type = v > 0 && v % 10 === 0 ? "levelUp" : "click";
+      const tile = context.board[y][x];
+      const type = tile.p ? "levelUp" : "click";
       sendRequest({ type, data: [{ y, x, value: 1 }] });
     },
     [sendRequest, context]

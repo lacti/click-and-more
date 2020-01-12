@@ -21,7 +21,7 @@ const Tile: React.FC<{
     // The latency from onClick is huge.
     onMouseDown={() => onClick(y, x)}
   >
-    {(tile.v || 0).toFixed(2)}
+    {(tile.v || 0)}/{tile.l}{tile.i === me && tile.p ? '!': ''}
   </td>
 ));
 

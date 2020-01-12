@@ -1,9 +1,9 @@
-import { Board, diffBoards, TileChange } from "../model";
+import { Board, diffBoards, tileCoreEquals, TileSync } from "../model";
 import { broadcast, IRespondResult } from "./support/broadcast";
 
 interface IClickBroadcast {
   type: "click";
-  changes: TileChange[];
+  changes: TileSync[];
 }
 
 interface IBroadcastArgs {
@@ -44,8 +44,7 @@ export class ClickBroadcast {
     const changes = diffBoards(
       oldBoard,
       newBoard,
-      (a, b) =>
-        a.i === b.i && a.l === b.l && Math.floor(a.v) === Math.floor(b.v)
+      tileCoreEquals,
     );
     if (changes.length === 0) {
       // console.debug(`Click broadcast`, `no changes`);

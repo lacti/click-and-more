@@ -1,5 +1,5 @@
 import { boardHeight, boardWidth } from "./constraints";
-import { emptyTile, IPos, ITile, TileChange, updateTile } from "./tile";
+import { baseTile, emptyTile, IPos, ITile, TileChange, tileCoreClone, TileSync, updateTile } from "./tile";
 import { isValidUser } from "./user";
 
 export type BoardRow = ITile[];
@@ -49,11 +49,7 @@ export const placeUsersToBoard = (
     if (!userPosition) {
       return;
     }
-    copiedBoard[userPosition.y][userPosition.x] = {
-      i: userIndex,
-      v: 0,
-      l: 1
-    };
+    copiedBoard[userPosition.y][userPosition.x] = baseTile(userIndex);
   });
   return copiedBoard;
 };
@@ -79,12 +75,12 @@ export const diffBoards = (
   before: Board,
   after: Board,
   equals: (a: ITile, b: ITile) => boolean
-): TileChange[] =>
+): TileSync[] =>
   before
     .map((row, y) =>
       row
         .map((oldTile, x) =>
-          equals(oldTile, after[y][x]) ? undefined : { ...after[y][x], y, x }
+          equals(oldTile, after[y][x]) ? undefined : { ...tileCoreClone(after[y][x]), y, x }
         )
         .filter(Boolean)
     )
