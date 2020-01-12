@@ -1,8 +1,10 @@
-import {Board, ITile, noOwnerIndex, updateTile} from "../model";
+import { Board, ITile, newChangingTile, noOwnerIndex, updateTile } from "../model";
 
 
-const getDegradationFactor = () => 1;
-const getSelfGrowingFactor = tileLevel => tileLevel;
+const getDegradationInterval = () => 1;
+const getDegradationAmount = () => 1;
+const getSelfGrowingInterval = () => 1;
+const getSelfGrowingAmount = tileLevel => tileLevel;
 
 
 export const updateGrowing = (board: Board, dt: number): Board => {
@@ -14,22 +16,35 @@ const updateTileSelf = (tile: ITile, dt: number): ITile => {
   if (tile.i === noOwnerIndex) {
     return tile;
   } else {
-    return updateTile(tile, getSelfChange(tile, dt));
+    if (tile.l === 0) {
+      return degrade(tile, dt);
+    } else {
+      return growSelf(tile, dt);
+    }
   }
 };
 
-const getSelfChange = (tile: ITile, dt: number): ITile => {
-  if (tile.l === 0) {
-    return {
-      i: noOwnerIndex,
-      v: getDegradationFactor() * dt,
-      l: 0,
-    };
-  } else {
-    return {
-      i: tile.i,
-      v: getSelfGrowingFactor(tile.l) * dt,
-      l: 0,
-    };
-  }
+const degrade = (tile: ITile, dt: number): ITile => {
+  const [multiple, remain] = processTimer(getDegradationInterval(), tile.growingTimer, dt);
+  return updateTile(tile, newChangingTile({
+    i: noOwnerIndex,
+    v: getDegradationAmount() * multiple,
+    growingTimer: remain - tile.growingTimer,
+  }));
+};
+
+const growSelf = (tile: ITile, dt: number): ITile => {
+  const [multiple, remain] = processTimer(getSelfGrowingInterval(), tile.growingTimer, dt);
+  return updateTile(tile, newChangingTile({
+    i: tile.i,
+    v: getSelfGrowingAmount(tile.l) * multiple,
+    growingTimer: remain - tile.growingTimer,
+  }));
+};
+
+const processTimer = (interval: number, oldTimer: number, dt: number): [number, number] => {
+  const newTimer = oldTimer + dt;
+  const multiple = Math.floor(newTimer / interval);
+  const remain = newTimer % interval;
+  return [multiple, remain];
 };
