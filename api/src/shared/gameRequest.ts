@@ -1,4 +1,8 @@
-import { IClientClickRequest, IClientLevelUpRequest, IClientLoadRequest } from "./clientRequest";
+import {
+  IClientClickRequest,
+  IClientLevelUpRequest,
+  IClientLoadRequest
+} from "./clientRequest";
 
 export interface IGameConnectionIdRequest {
   connectionId: string;
@@ -6,6 +10,7 @@ export interface IGameConnectionIdRequest {
 
 export interface IGameEnterRequest extends IGameConnectionIdRequest {
   type: "enter";
+  memberId: string;
 }
 
 export interface IGameLeaveRequest extends IGameConnectionIdRequest {
@@ -29,5 +34,4 @@ export type GameRequest =
   | IGameLeaveRequest
   | IGameLoadRequest
   | IGameClickRequest
-  | IGameLevelUpRequest
-  ;
+  | IGameLevelUpRequest;

@@ -4,8 +4,10 @@ import { ConsoleLogger } from "@yingyeothon/logger";
 import redisConnect from "@yingyeothon/naive-redis/lib/connection";
 import redisGet from "@yingyeothon/naive-redis/lib/get";
 import { APIGatewayProxyHandler } from "aws-lambda";
+import actorSubsysKeys from "../shared/actorSubsysKeys";
 import { ClientRequest, validateClientRequest } from "../shared/clientRequest";
 import env from "./support/env";
+import responses from "./support/responses";
 
 const logger = new ConsoleLogger(`debug`);
 const redisConnection = redisConnect({
@@ -24,33 +26,34 @@ export const handle: APIGatewayProxyHandler = async event => {
       throw new Error(`Invalid message: [${event.body}]`);
     }
   } catch (error) {
-    console.warn(`Invalid message`, connectionId, request, error);
-    return { statusCode: 404, body: "Not Found" };
+    logger.error(`Invalid message`, connectionId, request, error);
+    return responses.NotFound;
   }
 
   // Read gameId related this connectionId.
   const gameId: string | null = await redisGet(
     redisConnection,
-    env.connectionGameIdPrefix + connectionId
+    env.redisKeyPrefixOfConnectionIdAndGameID + connectionId
   );
-  console.info(`Game id`, connectionId, gameId);
+  logger.info(`Game id`, connectionId, gameId);
   if (!gameId) {
-    console.warn(`No GameID for connection[${connectionId}]`);
-    return { statusCode: 404, body: "Not Found" };
+    logger.error(`No GameID for connection[${connectionId}]`);
+    return responses.NotFound;
   }
 
   // Encode a game message and send it to Redis Q.
   await actorEnqueue(
     {
       id: gameId,
-      queue: actorRedisPush({ connection: redisConnection, logger }),
+      queue: actorRedisPush({
+        connection: redisConnection,
+        keyPrefix: actorSubsysKeys.queueKeyPrefix,
+        logger
+      }),
       logger
     },
     { item: { ...request, connectionId } }
   );
-  console.info(`Game message sent`, connectionId, gameId, request);
-  return {
-    statusCode: 200,
-    body: "OK"
-  };
+  logger.info(`Game message sent`, connectionId, gameId, request);
+  return responses.OK;
 };

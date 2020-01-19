@@ -1,77 +1,71 @@
 import actorRedisPush from "@yingyeothon/actor-system-redis-support/lib/queue/push";
 import actorEnqueue from "@yingyeothon/actor-system/lib/actor/enqueue";
 import { ConsoleLogger } from "@yingyeothon/logger";
-import redisConnect from "@yingyeothon/naive-redis/lib/connection";
+import redisGet from "@yingyeothon/naive-redis/lib/get";
 import redisSet from "@yingyeothon/naive-redis/lib/set";
 import { APIGatewayProxyHandler } from "aws-lambda";
-import { Lambda } from "aws-sdk";
-import { IGameActorEvent } from "../shared/actorRequest";
-import { defaultGameId } from "../shared/constants";
+import { loadActorStartEvent } from "../shared/actorRequest";
+import actorSubsysKeys from "../shared/actorSubsysKeys";
 import env from "./support/env";
+import responses from "./support/responses";
+import useRedis from "./support/useRedis";
 
-export const expirationMillis = 900 * 1000;
+const expirationMillis = 900 * 1000;
+const logger = new ConsoleLogger(`debug`);
 
 export const handle: APIGatewayProxyHandler = async event => {
-  const connectionId = event.requestContext.connectionId;
-
-  const logger = new ConsoleLogger(`debug`);
-  const redisConnection = redisConnect({
-    host: env.redisHost,
-    password: env.redisPassword
-  });
-
-  try {
-    // TODO Check the validity of origin or referer of HTTP request.
-    logger.debug(`Headers`, event.headers);
-
+  const { connectionId } = event.requestContext;
+  const getParameter = (key: string) =>
+    event.headers[key] ?? (event.queryStringParameters ?? {})[key];
+  return useRedis(async redisConnection => {
     // A client should send a "X-GAME-ID" via HTTP Header.
-    // TODO This value can be set from the lobby service.
-    const gameId = event.headers["x-game-id"] || defaultGameId();
-    // if (!gameId) {
-    //   console.warn(`Invalid gameId from connection`, connectionId);
-    //   return { statusCode: 404, body: "Not Found" };
-    // }
+    const gameId = getParameter("x-game-id");
+    const memberId = getParameter("x-member-id");
 
+    // Validate starting information.
+    if (!gameId || !memberId) {
+      logger.error(`Invalid gameId from connection`, connectionId);
+      return responses.NotFound;
+    }
+    const startEvent = await loadActorStartEvent({
+      gameId,
+      get: key => redisGet(redisConnection, key)
+    });
+    if (startEvent === null) {
+      logger.error(`Invalid game context from gameId`, gameId);
+      return responses.NotFound;
+    }
+    if (startEvent.members.every(m => m.memberId !== memberId)) {
+      logger.error(`Not registered member`, startEvent, memberId);
+      return responses.NotFound;
+    }
+
+    // Register connection and start a game.
     await redisSet(
       redisConnection,
-      env.connectionGameIdPrefix + connectionId,
+      env.redisKeyPrefixOfConnectionIdAndGameID + connectionId,
       gameId,
       { expirationMillis }
     );
     await actorEnqueue(
       {
         id: gameId,
-        queue: actorRedisPush({ connection: redisConnection, logger }),
+        queue: actorRedisPush({
+          connection: redisConnection,
+          keyPrefix: actorSubsysKeys.queueKeyPrefix,
+          logger
+        }),
         logger
       },
       {
         item: {
           type: "enter",
-          connectionId
+          connectionId,
+          memberId
         }
       }
     );
-
-    // Start a new Lambda to process game messages.
-    await new Lambda({
-      endpoint: env.isOffline ? `http://localhost:3000` : undefined
-    })
-      .invoke({
-        FunctionName: env.gameActorLambdaName,
-        InvocationType: "Event",
-        Qualifier: "$LATEST",
-        Payload: JSON.stringify({
-          gameId,
-          invokerConnectionId: connectionId
-        } as IGameActorEvent)
-      })
-      .promise();
     logger.info(`Game logged`, gameId, connectionId);
-    return {
-      statusCode: 200,
-      body: "OK"
-    };
-  } finally {
-    redisConnection.socket.disconnect();
-  }
+    return responses.OK;
+  });
 };
