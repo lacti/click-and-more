@@ -42,7 +42,7 @@ const App: React.FC = () => {
         return;
       }
       const tile = context.board[y][x];
-      const type = tile.p ? "levelUp" : "click";
+      const type = tile.i === context.me && tile.p ? "levelUp" : "click";
       sendRequest({ type, data: [{ y, x, value: 1 }] });
     },
     [sendRequest, context]
