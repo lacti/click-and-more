@@ -5,6 +5,7 @@ export interface IUser {
 
 export interface IGameUser extends IUser {
   connectionId: string;
+  memberId: string;
 }
 
 export const gameUserToUser = ({ index, color }: IGameUser) => ({

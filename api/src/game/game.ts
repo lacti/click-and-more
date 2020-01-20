@@ -1,7 +1,9 @@
+import { IGameMember } from "../shared/actorRequest";
 import {
   GameRequest,
   IGameClickRequest,
   IGameConnectionIdRequest,
+  IGameEnterRequest,
   IGameLevelUpRequest
 } from "../shared/gameRequest";
 import {
@@ -12,7 +14,6 @@ import {
   newBoard,
   newTileChange,
   placeUsersToBoard,
-  resetOwnedTiles,
   withBoardValidator
 } from "./model";
 import {
@@ -20,13 +21,11 @@ import {
   boardWidth,
   gameRunningSeconds,
   gameWaitSeconds,
-  loopInterval,
-  userCapacity
+  loopInterval
 } from "./model/constraints";
 import { GameStage } from "./model/stage";
 import {
   broadcastEnd,
-  broadcastLeaver,
   broadcastNewbie,
   broadcastStage,
   ClickBroadcast,
@@ -39,11 +38,8 @@ import { getRandomColor } from "./support/utils";
 import { updateGrowing } from "./system/growing";
 
 export default class Game {
-  public static readonly gameAliveSeconds: number =
-    gameWaitSeconds + gameRunningSeconds;
-
-  private userSerial: number = 0;
-  private users: { [connectionId: string]: IGameUser } = {};
+  private readonly users: IGameUser[];
+  private connectedUsers: { [connectionId: string]: IGameUser } = {};
   private board: Board;
   private lastMillis: number;
 
@@ -52,39 +48,52 @@ export default class Game {
 
   constructor(
     private readonly gameId: string,
+    members: IGameMember[],
     private readonly pollRequests: () => Promise<GameRequest[]>
   ) {
     this.board = newBoard(boardHeight, boardWidth);
     this.clickBroadcast = new ClickBroadcast(this.board);
+
+    // Setup game context from members.
+    this.users = members.map(
+      (member, index) =>
+        ({
+          index: index + 1,
+          color: getRandomColor(),
+          connected: false,
+          connectionId: "",
+          memberId: member.memberId
+        } as IGameUser)
+    );
+    this.board = placeUsersToBoard(
+      this.board,
+      this.users.map(x => x.index)
+    );
   }
 
   public run = async () => {
     await this.stageWait();
-    await this.stageRunning();
+    if (Object.keys(this.connectedUsers).length > 0) {
+      await this.stageRunning();
+    }
     await this.stageEnd();
   };
 
   private stageWait = async () => {
     console.info(`Game WAIT-stage`, this.gameId, this.users);
 
-    // TODO Delete users if their sockets has been gone.
     this.ticker = new Ticker(GameStage.Wait, gameWaitSeconds * 1000);
     while (this.ticker.isAlive()) {
       const requests = await this.pollRequests();
       await this.processEnterLeaveLoad(requests);
 
-      if (Object.keys(this.users).length === userCapacity) {
+      if (Object.keys(this.connectedUsers).length === this.users.length) {
         break;
       }
 
       await this.ticker.checkAgeChanged(this.broadcastStage);
       await sleep(loopInterval);
     }
-
-    this.board = placeUsersToBoard(
-      this.board,
-      Object.values(this.users).map(x => x.index)
-    );
   };
 
   private stageRunning = async () => {
@@ -94,7 +103,6 @@ export default class Game {
     this.ticker = new Ticker(GameStage.Running, gameRunningSeconds * 1000);
     while (this.ticker.isAlive()) {
       const requests = await this.pollRequests();
-      // await this.processLeaveOnly(requests);
       await this.processEnterLeaveLoad(requests);
 
       this.processChanges(requests);
@@ -108,10 +116,11 @@ export default class Game {
 
   private stageEnd = async () => {
     console.info(`Game END-stage`, this.gameId);
-    await broadcastEnd(Object.keys(this.users), calculateScore(this.board));
-
-    await Promise.all(Object.keys(this.users).map(dropConnection));
-    this.users = {};
+    await broadcastEnd(
+      Object.keys(this.connectedUsers),
+      calculateScore(this.board)
+    );
+    await Promise.all(Object.keys(this.connectedUsers).map(dropConnection));
   };
 
   private processEnterLeaveLoad = async (requests: GameRequest[]) => {
@@ -123,7 +132,7 @@ export default class Game {
           break;
         case "leave":
           if (this.isValidUser(request)) {
-            await this.onLeave(request);
+            this.onLeave(request);
           }
           break;
         case "load":
@@ -135,26 +144,6 @@ export default class Game {
     }
   };
 
-  // private processLeaveOnly = async (requests: GameRequest[]) => {
-  //   // TODO Error tolerance
-  //   for (const request of requests) {
-  //     switch (request.type) {
-  //       case "leave":
-  //         if (this.isValidUser(request)) {
-  //           await this.onLeave(request);
-  //         }
-  //         break;
-  //       default:
-  //         console.warn(
-  //           `Disconnect the user connecting after game starts`,
-  //           request
-  //         );
-  //         await dropConnection(request.connectionId);
-  //         break;
-  //     }
-  //   }
-  // };
-
   private processChanges = (requests: GameRequest[]) => {
     const { validateTileChange } = withBoardValidator(this.board);
     const clickChanges = requests
@@ -163,7 +152,7 @@ export default class Game {
       .map(({ connectionId, data }: IGameClickRequest) =>
         data.map(({ y, x, value }) =>
           newTileChange({
-            i: this.users[connectionId].index,
+            i: this.connectedUsers[connectionId].index,
             v: value,
             y,
             x
@@ -178,7 +167,7 @@ export default class Game {
       .map(({ connectionId, data }: IGameLevelUpRequest) =>
         data.map(({ y, x, value }) =>
           newTileChange({
-            i: this.users[connectionId].index,
+            i: this.connectedUsers[connectionId].index,
             l: value,
             y,
             x
@@ -203,37 +192,44 @@ export default class Game {
   };
 
   private isValidUser = ({ connectionId }: IGameConnectionIdRequest) =>
-    this.users[connectionId] !== undefined;
+    this.connectedUsers[connectionId] !== undefined;
 
-  private onEnter = ({ connectionId }: IGameConnectionIdRequest) => {
-    // The index of user would start from 1.
-    const index = ++this.userSerial;
-    const newbie: IGameUser = {
-      connectionId,
-      color: getRandomColor(),
-      index
-    };
-    this.users[newbie.connectionId] = newbie;
-    return logHook(`Game newbie`, this.gameId, newbie, this.users)(
-      broadcastNewbie(Object.keys(this.users), newbie)
+  private onEnter = ({ connectionId, memberId }: IGameEnterRequest) => {
+    const newbie = this.users.find(u => u.memberId === memberId);
+    newbie.connectionId = connectionId;
+
+    this.connectedUsers[connectionId] = newbie;
+    return logHook(
+      `Game newbie`,
+      this.gameId,
+      newbie,
+      this.users
+    )(
+      broadcastNewbie(
+        Object.keys(this.connectedUsers).filter(each => each !== connectionId),
+        newbie
+      )
     );
   };
 
   private onLeave = ({ connectionId }: IGameConnectionIdRequest) => {
-    const leaver = this.users[connectionId];
-    delete this.users[connectionId];
+    const leaver = this.connectedUsers[connectionId];
+    leaver.connectionId = "";
+    delete this.connectedUsers[connectionId];
 
-    this.board = resetOwnedTiles(this.board, leaver.index);
-    return logHook(`Game leaver`, this.gameId, leaver, this.users)(
-      broadcastLeaver(Object.keys(this.users), leaver)
-    );
+    // No reset for leaver because they can reconnect.
   };
 
   private onLoad = ({ connectionId }: IGameConnectionIdRequest) =>
-    logHook(`Game load`, this.gameId, connectionId, this.users)(
+    logHook(
+      `Game load`,
+      this.gameId,
+      connectionId,
+      this.users
+    )(
       replyLoad(
         connectionId,
-        Object.values(this.users),
+        this.users,
         this.board,
         this.ticker!.stage,
         this.ticker!.age
@@ -243,13 +239,17 @@ export default class Game {
   private broadcastClick = () =>
     this.clickBroadcast.broadcast({
       newBoard: this.board,
-      connectionIds: Object.keys(this.users)
+      connectionIds: Object.keys(this.connectedUsers)
     });
 
   private broadcastStage = (stage: GameStage, age: number) =>
-    logHook(`Game broadcast stage`, this.gameId, this.users, stage, age)(
-      broadcastStage(Object.keys(this.users), stage, age)
-    );
+    logHook(
+      `Game broadcast stage`,
+      this.gameId,
+      this.users,
+      stage,
+      age
+    )(broadcastStage(Object.keys(this.connectedUsers), stage, age));
 }
 
 const logHook = (...args: any[]) => {

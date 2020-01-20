@@ -77,6 +77,12 @@ functions:
     handler: src/game/actor.handle
     timeout: 900
     memorySize: 1024
+  debugStart:
+    handler: src/proxy/debugStart.handle
+    timeout: 6
+    memorySize: 256
+    events:
+      - http: POST /debug
   serve:
     handler: src/html/serve.handle
     timeout: 6
