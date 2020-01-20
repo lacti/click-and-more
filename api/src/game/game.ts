@@ -56,14 +56,13 @@ export default class Game {
 
     // Setup game context from members.
     this.users = members.map(
-      (member, index) =>
-        ({
-          index: index + 1,
-          color: getRandomColor(),
-          connected: false,
-          connectionId: "",
-          memberId: member.memberId
-        } as IGameUser)
+      (member, index): IGameUser => ({
+        index: index + 1,
+        color: getRandomColor(),
+        connectionId: "",
+        load: false,
+        memberId: member.memberId
+      })
     );
   }
 
@@ -193,6 +192,7 @@ export default class Game {
   private onEnter = ({ connectionId, memberId }: IGameEnterRequest) => {
     const newbie = this.users.find(u => u.memberId === memberId);
     newbie.connectionId = connectionId;
+    newbie.load = false;
 
     this.connectedUsers[connectionId] = newbie;
     return logHook(
@@ -211,6 +211,7 @@ export default class Game {
   private onLeave = ({ connectionId }: IGameConnectionIdRequest) => {
     const leaver = this.connectedUsers[connectionId];
     leaver.connectionId = "";
+    leaver.load = false;
     delete this.connectedUsers[connectionId];
 
     // No reset for leaver because they can reconnect.
@@ -218,6 +219,7 @@ export default class Game {
 
   private onLoad = ({ connectionId }: IGameConnectionIdRequest) => {
     const user = this.connectedUsers[connectionId];
+    user.load = true;
     this.board = placeUsersToBoard(this.board, user.index);
     return logHook(
       `Game load`,
@@ -238,7 +240,7 @@ export default class Game {
   private broadcastClick = () =>
     this.clickBroadcast.broadcast({
       newBoard: this.board,
-      connectionIds: Object.keys(this.connectedUsers)
+      connectionIds: this.users.filter(u => u.load).map(u => u.connectionId)
     });
 
   private broadcastStage = (stage: GameStage, age: number) =>
