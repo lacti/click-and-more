@@ -65,10 +65,6 @@ export default class Game {
           memberId: member.memberId
         } as IGameUser)
     );
-    this.board = placeUsersToBoard(
-      this.board,
-      this.users.map(x => x.index)
-    );
   }
 
   public run = async () => {
@@ -220,8 +216,10 @@ export default class Game {
     // No reset for leaver because they can reconnect.
   };
 
-  private onLoad = ({ connectionId }: IGameConnectionIdRequest) =>
-    logHook(
+  private onLoad = ({ connectionId }: IGameConnectionIdRequest) => {
+    const user = this.connectedUsers[connectionId];
+    this.board = placeUsersToBoard(this.board, user.index);
+    return logHook(
       `Game load`,
       this.gameId,
       connectionId,
@@ -235,6 +233,7 @@ export default class Game {
         this.ticker!.age
       )
     );
+  };
 
   private broadcastClick = () =>
     this.clickBroadcast.broadcast({
