@@ -1,5 +1,14 @@
 import { boardHeight, boardWidth } from "./constraints";
-import { baseTile, emptyTile, IPos, ITile, TileChange, tileCoreClone, TileSync, updateTile } from "./tile";
+import {
+  baseTile,
+  emptyTile,
+  IPos,
+  ITile,
+  TileChange,
+  tileCoreClone,
+  TileSync,
+  updateTile
+} from "./tile";
 import { isValidUser } from "./user";
 
 export type BoardRow = ITile[];
@@ -37,20 +46,15 @@ const getUserPositions = (board: Board): { [userIndex: number]: IPos } => {
   };
 };
 
-export const placeUsersToBoard = (
-  board: Board,
-  userIndices: number[]
-): Board => {
+export const placeUsersToBoard = (board: Board, userIndex: number): Board => {
   const userPositions = getUserPositions(board);
 
+  const userPosition = userPositions[userIndex];
+  if (!userPosition) {
+    return board;
+  }
   const copiedBoard = duplicateBoard(board);
-  userIndices.forEach(userIndex => {
-    const userPosition = userPositions[userIndex];
-    if (!userPosition) {
-      return;
-    }
-    copiedBoard[userPosition.y][userPosition.x] = baseTile(userIndex);
-  });
+  copiedBoard[userPosition.y][userPosition.x] = baseTile(userIndex);
   return copiedBoard;
 };
 
@@ -80,7 +84,9 @@ export const diffBoards = (
     .map((row, y) =>
       row
         .map((oldTile, x) =>
-          equals(oldTile, after[y][x]) ? undefined : { ...tileCoreClone(after[y][x]), y, x }
+          equals(oldTile, after[y][x])
+            ? undefined
+            : { ...tileCoreClone(after[y][x]), y, x }
         )
         .filter(Boolean)
     )
@@ -110,7 +116,12 @@ export const withBoardValidator = (board: Board) => {
       return true;
     }
     // Or that tile is near by my tile.
-    const nearBy = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+    const nearBy = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1]
+    ]
       .map(([dy, dx]) => [y + dy, x + dx])
       .filter(
         ([ny, nx]) => ny >= 0 && ny < boardHeight && nx >= 0 && nx < boardWidth
