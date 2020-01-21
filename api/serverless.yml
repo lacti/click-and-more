@@ -2,7 +2,6 @@ service:
   name: click-and-more-api
 
 plugins:
-  - serverless-plugin-scripts
   - serverless-webpack
   - serverless-prune-plugin
   - serverless-offline
@@ -17,8 +16,6 @@ provider:
     lambda: true
   apiGateway:
     minimumCompressionSize: 1024
-    binaryMediaTypes:
-      - "image/*"
   environment:
     PUBLIC_URL: ${env:PUBLIC_URL}
     REDIS_HOST: ${env:REDIS_HOST}
@@ -44,9 +41,6 @@ custom:
   prune:
     automatic: true
     number: 7
-  scripts:
-    hooks:
-      "webpack:package:packExternalModules": /bin/bash .prepackage.sh
 
 package:
   individually: true
@@ -83,16 +77,3 @@ functions:
     memorySize: 256
     events:
       - http: POST /debug
-  serve:
-    handler: src/html/serve.handle
-    timeout: 6
-    memorySize: 256
-    events:
-      - http: GET /
-      - http: GET /{file}
-      - http: GET /static/css/{file}
-      - http: GET /static/js/{file}
-      - http: GET /static/media/{file}
-    package:
-      include:
-        - html-bundle.zip
