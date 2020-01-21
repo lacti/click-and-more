@@ -9,6 +9,26 @@ jobs:
 
       - name: "Deploy front-end"
         run: cd front && yarn && yarn deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_DEFAULT_OUTPUT: ${{ secrets.AWS_DEFAULT_OUTPUT }}
+          REACT_APP_AUTH_URL: ${{ secrets.REACT_APP_AUTH_URL }}
+          REACT_APP_GAME_APPLICATION_ID: ${{ secrets.REACT_APP_GAME_APPLICATION_ID }}
+          REACT_APP_LOBBY_URL: ${{ secrets.REACT_APP_LOBBY_URL }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          S3_BUCKET_PATH: ${{ secrets.S3_BUCKET_PATH }}
+          DISTRIBUTION_ID: ${{ secrets.DISTRIBUTION_ID }}
 
       - name: "Deploy back-end"
         run: cd api && yarn && yarn deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_DEFAULT_OUTPUT: ${{ secrets.AWS_DEFAULT_OUTPUT }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          STAGE: ${{ secrets.STAGE }}
+          WS_ENDPOINT: ${{ secrets.WS_ENDPOINT }}
