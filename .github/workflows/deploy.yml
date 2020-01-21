@@ -1,0 +1,14 @@
+name: "Deploy all"
+on: [push]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Clone this repository"
+        uses: actions/checkout@v1
+
+      - name: "Deploy front-end"
+        run: cd front && yarn && yarn deploy
+
+      - name: "Deploy back-end"
+        run: cd api && yarn && yarn deploy
