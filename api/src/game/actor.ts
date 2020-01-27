@@ -3,6 +3,7 @@ import { ConsoleLogger } from "@yingyeothon/logger";
 import redisDel from "@yingyeothon/naive-redis/lib/del";
 import redisSet from "@yingyeothon/naive-redis/lib/set";
 import { Handler } from "aws-lambda";
+import readyCall from "../lobby/readyCall";
 import {
   clearActorStartEvent,
   IGameActorStartEvent,
@@ -25,6 +26,7 @@ export const handle: Handler<IGameActorStartEvent, void> = async event => {
     return;
   }
 
+  // First, store game context into Redis.
   await saveActorStartEvent({
     event,
     set: (key, value) =>
@@ -32,6 +34,14 @@ export const handle: Handler<IGameActorStartEvent, void> = async event => {
         expirationMillis: gameAliveSeconds * 1000
       })
   });
+
+  // Send the ready signal to the Lobby.
+  if (event.callbackUrl !== undefined) {
+    const response = await readyCall(event.callbackUrl);
+    logger.debug(`Mark this game as ready`, response);
+  }
+
+  // Start the game loop.
   await actorEventLoop<GameRequest>({
     ...actorSubsys,
     id: gameId,

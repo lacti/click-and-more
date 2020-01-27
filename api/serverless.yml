@@ -17,7 +17,6 @@ provider:
   apiGateway:
     minimumCompressionSize: 1024
   environment:
-    PUBLIC_URL: ${env:PUBLIC_URL}
     REDIS_HOST: ${env:REDIS_HOST}
     REDIS_PASSWORD: ${env:REDIS_PASSWORD}
     WS_ENDPOINT: ${env:WS_ENDPOINT}

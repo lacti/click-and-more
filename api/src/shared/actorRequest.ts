@@ -7,6 +7,7 @@ export interface IGameMember {
 export interface IGameActorStartEvent {
   gameId: string;
   members: IGameMember[];
+  callbackUrl?: string;
 }
 
 const keyPrefixOfEvent = `click-and-more/actor-event/`;
