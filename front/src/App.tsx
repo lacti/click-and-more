@@ -43,8 +43,12 @@ async function authenticate(): Promise<IGameStart> {
       })
         .then(token => token.text())
         .catch(reject);
+      if (authToken === undefined) {
+        return;
+      }
+
       const ws = new WebSocket(
-        lobbyUrl + "?authorization=" + encodeURIComponent(`Bearer ${authToken}`)
+        lobbyUrl + "?authorization=" + encodeURIComponent(authToken)
       );
       ws.onerror = reject;
       ws.onopen = () => {
