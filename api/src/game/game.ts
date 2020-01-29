@@ -17,8 +17,6 @@ import {
   withBoardValidator
 } from "./model";
 import {
-  boardHeight,
-  boardWidth,
   gameRunningSeconds,
   gameWaitSeconds,
   loopInterval
@@ -36,6 +34,10 @@ import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
 import { updateGrowing } from "./system/growing";
+
+// TODO How about choosing the size of board by the count of members?
+const boardHeight = 5;
+const boardWidth = 5;
 
 export default class Game {
   private readonly users: IGameUser[];
