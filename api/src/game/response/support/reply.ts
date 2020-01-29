@@ -1,5 +1,6 @@
 import { ApiGatewayManagementApi } from "aws-sdk";
 import mem from "mem";
+import logger from "../../logger";
 import env from "../../support/env";
 
 const apimgmt = new ApiGatewayManagementApi({
@@ -18,7 +19,7 @@ export const reply = mem(
       .promise()
       .then(() => true)
       .catch(error => {
-        console.warn(`Cannot reply to`, connectionId, response, error);
+        logger.error(`Cannot reply to`, connectionId, response, error);
         return false;
       })
 );

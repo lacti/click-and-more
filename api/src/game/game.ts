@@ -6,6 +6,7 @@ import {
   IGameEnterRequest,
   IGameLevelUpRequest
 } from "../shared/gameRequest";
+import logger from "./logger";
 import {
   applyChangesToBoard,
   Board,
@@ -69,15 +70,19 @@ export default class Game {
   }
 
   public run = async () => {
-    await this.stageWait();
-    if (Object.keys(this.connectedUsers).length > 0) {
-      await this.stageRunning();
+    try {
+      await this.stageWait();
+      if (Object.keys(this.connectedUsers).length > 0) {
+        await this.stageRunning();
+      }
+    } catch (error) {
+      logger.error(`Error in game logic`, error);
     }
     await this.stageEnd();
   };
 
   private stageWait = async () => {
-    console.info(`Game WAIT-stage`, this.gameId, this.users);
+    logger.info(`Game WAIT-stage`, this.gameId, this.users);
 
     this.ticker = new Ticker(GameStage.Wait, gameWaitSeconds * 1000);
     while (this.ticker.isAlive()) {
@@ -94,7 +99,7 @@ export default class Game {
   };
 
   private stageRunning = async () => {
-    console.info(`Game RUNNING-stage`, this.gameId, this.users);
+    logger.info(`Game RUNNING-stage`, this.gameId, this.users);
 
     this.lastMillis = Date.now();
     this.ticker = new Ticker(GameStage.Running, gameRunningSeconds * 1000);
@@ -112,7 +117,7 @@ export default class Game {
   };
 
   private stageEnd = async () => {
-    console.info(`Game END-stage`, this.gameId);
+    logger.info(`Game END-stage`, this.gameId);
     await broadcastEnd(
       Object.keys(this.connectedUsers),
       calculateScore(this.board)
@@ -123,60 +128,68 @@ export default class Game {
   private processEnterLeaveLoad = async (requests: GameRequest[]) => {
     // TODO Error tolerance
     for (const request of requests) {
-      switch (request.type) {
-        case "enter":
-          await this.onEnter(request);
-          break;
-        case "leave":
-          if (this.isValidUser(request)) {
-            this.onLeave(request);
-          }
-          break;
-        case "load":
-          if (this.isValidUser(request)) {
-            await this.onLoad(request);
-          }
-          break;
+      try {
+        switch (request.type) {
+          case "enter":
+            await this.onEnter(request);
+            break;
+          case "leave":
+            if (this.isValidUser(request)) {
+              this.onLeave(request);
+            }
+            break;
+          case "load":
+            if (this.isValidUser(request)) {
+              await this.onLoad(request);
+            }
+            break;
+        }
+      } catch (error) {
+        logger.error(`Error in request`, request, error);
       }
     }
   };
 
   private processChanges = (requests: GameRequest[]) => {
-    const { validateTileChange } = withBoardValidator(this.board);
-    const clickChanges = requests
-      .filter(e => e.type === "click")
-      .filter(this.isValidUser)
-      .map(({ connectionId, data }: IGameClickRequest) =>
-        data.map(({ y, x, value }) =>
-          newTileChange({
-            i: this.connectedUsers[connectionId].index,
-            v: value,
-            y,
-            x
-          })
+    try {
+      const { validateTileChange } = withBoardValidator(this.board);
+      const clickChanges = requests
+        .filter(e => e.type === "click")
+        .filter(this.isValidUser)
+        .map(({ connectionId, data }: IGameClickRequest) =>
+          data.map(({ y, x, value }) =>
+            newTileChange({
+              i: this.connectedUsers[connectionId].index,
+              v: value,
+              y,
+              x
+            })
+          )
         )
-      )
-      .reduce((a, b) => a.concat(b), [])
-      .filter(validateTileChange);
-    const levelUpChanges = requests
-      .filter(e => e.type === "levelUp")
-      .filter(this.isValidUser)
-      .map(({ connectionId, data }: IGameLevelUpRequest) =>
-        data.map(({ y, x, value }) =>
-          newTileChange({
-            i: this.connectedUsers[connectionId].index,
-            l: value,
-            y,
-            x
-          })
+        .reduce((a, b) => a.concat(b), [])
+        .filter(validateTileChange);
+      const levelUpChanges = requests
+        .filter(e => e.type === "levelUp")
+        .filter(this.isValidUser)
+        .map(({ connectionId, data }: IGameLevelUpRequest) =>
+          data.map(({ y, x, value }) =>
+            newTileChange({
+              i: this.connectedUsers[connectionId].index,
+              l: value,
+              y,
+              x
+            })
+          )
         )
-      )
-      .reduce((a, b) => a.concat(b), [])
-      .filter(validateTileChange);
-    const changes = [...clickChanges, ...levelUpChanges];
-    if (changes.length > 0) {
-      logHook(`Game apply changes`, this.gameId, JSON.stringify(changes));
-      this.board = applyChangesToBoard(this.board, changes);
+        .reduce((a, b) => a.concat(b), [])
+        .filter(validateTileChange);
+      const changes = [...clickChanges, ...levelUpChanges];
+      if (changes.length > 0) {
+        logHook(`Game apply changes`, this.gameId, JSON.stringify(changes));
+        this.board = applyChangesToBoard(this.board, changes);
+      }
+    } catch (error) {
+      logger.error(`Error in processing changes`, requests, error);
     }
   };
 
@@ -256,6 +269,6 @@ export default class Game {
 }
 
 const logHook = (...args: any[]) => {
-  console.info(...args);
+  logger.debug(...args);
   return <T>(next: T) => next;
 };
