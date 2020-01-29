@@ -1,4 +1,3 @@
-import { boardHeight, boardWidth } from "./constraints";
 import {
   baseTile,
   emptyTile,
@@ -116,6 +115,8 @@ export const withBoardValidator = (board: Board) => {
       return true;
     }
     // Or that tile is near by my tile.
+    const boardHeight = board.length;
+    const boardWidth = board[0]?.length;
     const nearBy = [
       [1, 0],
       [-1, 0],
