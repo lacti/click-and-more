@@ -137,3 +137,7 @@ export const withBoardValidator = (board: Board) => {
   };
   return { validateTileChange };
 };
+
+export const isEliminated = (board: Board) =>
+  new Set(board.flatMap(row => row.map(col => col.i)).filter(isValidUser))
+    .size <= 1;
