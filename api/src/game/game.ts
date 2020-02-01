@@ -12,6 +12,7 @@ import {
   Board,
   calculateScore,
   IGameUser,
+  isEliminated,
   newBoard,
   newTileChange,
   placeUsersToBoard,
@@ -60,6 +61,7 @@ export default class Game {
     // Setup game context from members.
     this.users = members.map(
       (member, index): IGameUser => ({
+        // userIndex should start from 1.
         index: index + 1,
         color: getRandomColor(),
         connectionId: "",
@@ -95,6 +97,10 @@ export default class Game {
 
       await this.ticker.checkAgeChanged(this.broadcastStage);
       await sleep(loopInterval);
+
+      if (isEliminated(this.board)) {
+        break;
+      }
     }
   };
 
