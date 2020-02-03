@@ -21,7 +21,8 @@ import {
 import {
   gameRunningSeconds,
   gameWaitSeconds,
-  loopInterval
+  loopInterval,
+  minAgeToCheckIfEliminated
 } from "./model/constraints";
 import { GameStage } from "./model/stage";
 import {
@@ -116,7 +117,10 @@ export default class Game {
       await this.ticker.checkAgeChanged(this.broadcastStage);
       await sleep(loopInterval);
 
-      if (isEliminated(this.board)) {
+      if (
+        this.ticker.age > minAgeToCheckIfEliminated &&
+        isEliminated(this.board)
+      ) {
         break;
       }
     }
