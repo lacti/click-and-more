@@ -97,10 +97,6 @@ export default class Game {
 
       await this.ticker.checkAgeChanged(this.broadcastStage);
       await sleep(loopInterval);
-
-      if (isEliminated(this.board)) {
-        break;
-      }
     }
   };
 
@@ -119,6 +115,10 @@ export default class Game {
 
       await this.ticker.checkAgeChanged(this.broadcastStage);
       await sleep(loopInterval);
+
+      if (isEliminated(this.board)) {
+        break;
+      }
     }
   };
 
