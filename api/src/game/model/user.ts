@@ -7,6 +7,9 @@ export interface IGameUser extends IUser {
   connectionId: string;
   memberId: string;
   load: boolean;
+
+  energy: number;
+  productivity: number;
 }
 
 export const gameUserToUser = ({ index, color }: IGameUser) => ({

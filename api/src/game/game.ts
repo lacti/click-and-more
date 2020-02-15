@@ -36,10 +36,14 @@ import { dropConnection } from "./response/drop";
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
+import { EnergySystem } from "./system/energy";
 
 // TODO How about choosing the size of board by the count of members?
 const boardHeight = 5;
 const boardWidth = 5;
+
+const initialEnergy = 20;
+const initialUserProductivity = 1;
 
 export default class Game {
   private readonly users: IGameUser[];
@@ -49,6 +53,8 @@ export default class Game {
 
   private readonly clickBroadcast: ClickBroadcast;
   private ticker: Ticker | null;
+
+  private energySystem: EnergySystem;
 
   constructor(
     private readonly gameId: string,
@@ -66,7 +72,10 @@ export default class Game {
         color: getRandomColor(),
         connectionId: "",
         load: false,
-        memberId: member.memberId
+        memberId: member.memberId,
+
+        energy: initialEnergy,
+        productivity: initialUserProductivity
       })
     );
   }
@@ -103,6 +112,8 @@ export default class Game {
   private stageRunning = async () => {
     logger.info(`Game RUNNING-stage`, this.gameId, this.users);
 
+    this.energySystem = new EnergySystem(this.users);
+
     this.lastMillis = Date.now();
     this.ticker = new Ticker(GameStage.Running, gameRunningSeconds * 1000);
     while (this.ticker.isAlive()) {
@@ -111,6 +122,7 @@ export default class Game {
 
       this.processChanges(requests);
       this.update();
+      this.sendEnergy();
       this.broadcastClick();
 
       await this.ticker.checkAgeChanged(this.broadcastStage);
@@ -210,8 +222,8 @@ export default class Game {
     this.updateWithDt(dt);
   };
 
-  private updateWithDt(_: number) {
-    // TODO
+  private updateWithDt(dt: number) {
+    this.energySystem.update(dt);
   }
 
   private isValidUser = ({ connectionId }: IGameConnectionIdRequest) =>
@@ -263,6 +275,10 @@ export default class Game {
         this.ticker!.age
       )
     );
+  };
+
+  private sendEnergy = () => {
+    // TODO
   };
 
   private broadcastClick = () =>
