@@ -9,7 +9,6 @@ export interface IGameUser extends IUser {
   load: boolean;
 
   energy: number;
-  productivity: number;
 }
 
 export const gameUserToUser = ({ index, color }: IGameUser) => ({

@@ -89,7 +89,7 @@ export const diffBoards = (
                 ...tileCoreClone(after[y][x]),
                 y,
                 x,
-                v: after[y][x].offence // TODO Just for Test
+                v: after[y][x].productivity // TODO Just for Test
               }
         )
         .filter(Boolean)

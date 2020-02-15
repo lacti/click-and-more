@@ -43,7 +43,6 @@ const boardHeight = 5;
 const boardWidth = 5;
 
 const initialEnergy = 20;
-const initialUserProductivity = 1;
 
 export default class Game {
   private readonly users: IGameUser[];
@@ -74,8 +73,7 @@ export default class Game {
         load: false,
         memberId: member.memberId,
 
-        energy: initialEnergy,
-        productivity: initialUserProductivity
+        energy: initialEnergy
       })
     );
   }
@@ -181,7 +179,7 @@ export default class Game {
           data.map(({ y, x, value }) =>
             newTileChange({
               i: this.connectedUsers[connectionId].index,
-              offence: value, // TODO
+              productivity: value, // TODO
               y,
               x
             })
@@ -196,7 +194,7 @@ export default class Game {
           data.map(({ y, x, value }) =>
             newTileChange({
               i: this.connectedUsers[connectionId].index,
-              offence: value, // TODO
+              productivity: value, // TODO
               y,
               x
             })
@@ -223,7 +221,7 @@ export default class Game {
   };
 
   private updateWithDt(dt: number) {
-    this.energySystem.update(dt);
+    this.energySystem.update(dt, this.board);
   }
 
   private isValidUser = ({ connectionId }: IGameConnectionIdRequest) =>

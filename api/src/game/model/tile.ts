@@ -62,6 +62,6 @@ export const updateTile = (tile: ITile, change: ITile): ITile => {
   return {
     ...tile,
     i: change.i,
-    offence: tile.offence + change.offence
+    productivity: tile.productivity + change.productivity
   };
 };
