@@ -36,15 +36,15 @@ const initialEnergy = 20;
 
 export default class Game {
   private readonly users: IGameUser[];
-  private connectedUsers: { [connectionId: string]: IGameUser } = {};
-  private board: Board;
+  private readonly connectedUsers: { [connectionId: string]: IGameUser } = {};
+  private readonly board: Board;
+
+  private readonly energySystem: EnergySystem;
+  private readonly networkSystem: NetworkSystem;
+  private readonly boardValidator: BoardValidator;
+
   private lastMillis: number;
-
   private ticker: Ticker | null;
-
-  private energySystem: EnergySystem;
-  private networkSystem: NetworkSystem;
-  private boardValidator: BoardValidator;
 
   constructor(
     private readonly gameId: string,
@@ -52,8 +52,6 @@ export default class Game {
     private readonly pollRequests: () => Promise<GameRequest[]>
   ) {
     this.board = newBoard(boardHeight, boardWidth);
-    this.networkSystem = new NetworkSystem(this.users, this.board);
-    this.boardValidator = new BoardValidator(this.board);
 
     // Setup game context from members.
     this.users = members.map(
@@ -68,6 +66,11 @@ export default class Game {
         energy: initialEnergy
       })
     );
+
+    // Initialize other systems.
+    this.networkSystem = new NetworkSystem(this.users, this.board);
+    this.boardValidator = new BoardValidator(this.board);
+    this.energySystem = new EnergySystem(this.users);
   }
 
   public run = async () => {
@@ -101,8 +104,6 @@ export default class Game {
 
   private stageRunning = async () => {
     logger.info(`Game RUNNING-stage`, this.gameId, this.users);
-
-    this.energySystem = new EnergySystem(this.users);
 
     this.lastMillis = Date.now();
     this.ticker = new Ticker(GameStage.Running, gameRunningSeconds * 1000);
@@ -229,7 +230,7 @@ export default class Game {
   private onLoad = ({ connectionId }: IGameConnectionIdRequest) => {
     const user = this.connectedUsers[connectionId];
     user.load = true;
-    this.board = placeUsersToBoard(this.board, user.index);
+    placeUsersToBoard(this.board, user.index);
     return logHook(
       `Game load`,
       this.gameId,

@@ -45,16 +45,12 @@ const getUserPositions = (board: Board): { [userIndex: number]: IPos } => {
   };
 };
 
-export const placeUsersToBoard = (board: Board, userIndex: number): Board => {
+export const placeUsersToBoard = (board: Board, userIndex: number) => {
   const userPositions = getUserPositions(board);
-
   const userPosition = userPositions[userIndex];
-  if (!userPosition) {
-    return board;
+  if (userPosition) {
+    board[userPosition.y][userPosition.x] = baseTile(userIndex);
   }
-  const copiedBoard = duplicateBoard(board);
-  copiedBoard[userPosition.y][userPosition.x] = baseTile(userIndex);
-  return copiedBoard;
 };
 
 export const applyChangesToBoard = (
