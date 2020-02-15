@@ -112,36 +112,6 @@ export const calculateScore = (board: Board) => {
   return score;
 };
 
-export const withBoardValidator = (board: Board) => {
-  const boardHeight = board.length;
-  const boardWidth = board[0]?.length;
-
-  const validateYx = (y: number, x: number) =>
-    y >= 0 && y < boardHeight && x >= 0 && x < boardWidth;
-
-  const validateTileChange = ({ y, x, i }: TileChange) => {
-    if (!validateYx(y, x)) {
-      return false;
-    }
-    // If that tile is mine.
-    if (board[y][x].i === i) {
-      return true;
-    }
-    // Or that tile is near by my tile.
-    const nearBy = [
-      [1, 0],
-      [-1, 0],
-      [0, 1],
-      [0, -1]
-    ]
-      .map(([dy, dx]) => [y + dy, x + dx])
-      .filter(([ny, nx]) => validateYx(ny, nx))
-      .some(([ny, nx]) => board[ny][nx].i === i);
-    return nearBy;
-  };
-  return { validateTileChange };
-};
-
 export const isEliminated = (board: Board) =>
   new Set(board.flatMap(row => row.map(col => col.i)).filter(isValidUser))
     .size <= 1;

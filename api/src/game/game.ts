@@ -1,22 +1,16 @@
 import { IGameMember } from "../shared/actorRequest";
 import {
   GameRequest,
-  IGameClickRequest,
   IGameConnectionIdRequest,
-  IGameEnterRequest,
-  IGameLevelUpRequest
+  IGameEnterRequest
 } from "../shared/gameRequest";
 import logger from "./logger";
 import {
-  applyChangesToBoard,
   Board,
-  calculateScore,
   IGameUser,
   isEliminated,
   newBoard,
-  newTileChange,
-  placeUsersToBoard,
-  withBoardValidator
+  placeUsersToBoard
 } from "./model";
 import {
   gameRunningSeconds,
@@ -25,18 +19,14 @@ import {
   minAgeToCheckIfEliminated
 } from "./model/constraints";
 import { GameStage } from "./model/stage";
-import {
-  broadcastEnd,
-  broadcastNewbie,
-  broadcastStage,
-  ClickBroadcast,
-  replyLoad
-} from "./response";
+import processChange from "./processChange";
 import { dropConnection } from "./response/drop";
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
 import { EnergySystem } from "./system/energy";
+import { NetworkSystem } from "./system/network";
+import { BoardValidator } from "./system/validator";
 
 // TODO How about choosing the size of board by the count of members?
 const boardHeight = 5;
@@ -50,10 +40,11 @@ export default class Game {
   private board: Board;
   private lastMillis: number;
 
-  private readonly clickBroadcast: ClickBroadcast;
   private ticker: Ticker | null;
 
   private energySystem: EnergySystem;
+  private networkSystem: NetworkSystem;
+  private boardValidator: BoardValidator;
 
   constructor(
     private readonly gameId: string,
@@ -61,7 +52,8 @@ export default class Game {
     private readonly pollRequests: () => Promise<GameRequest[]>
   ) {
     this.board = newBoard(boardHeight, boardWidth);
-    this.clickBroadcast = new ClickBroadcast(this.board);
+    this.networkSystem = new NetworkSystem(this.users, this.board);
+    this.boardValidator = new BoardValidator(this.board);
 
     // Setup game context from members.
     this.users = members.map(
@@ -118,10 +110,8 @@ export default class Game {
       const requests = await this.pollRequests();
       await this.processEnterLeaveLoad(requests);
 
-      this.processChanges(requests);
+      await this.processChanges(requests);
       this.update();
-      this.sendEnergy();
-      this.broadcastClick();
 
       await this.ticker.checkAgeChanged(this.broadcastStage);
       await sleep(loopInterval);
@@ -137,10 +127,7 @@ export default class Game {
 
   private stageEnd = async () => {
     logger.info(`Game END-stage`, this.gameId);
-    await broadcastEnd(
-      Object.keys(this.connectedUsers),
-      calculateScore(this.board)
-    );
+    await this.networkSystem.end();
     await Promise.all(Object.keys(this.connectedUsers).map(dropConnection));
   };
 
@@ -169,46 +156,35 @@ export default class Game {
     }
   };
 
-  private processChanges = (requests: GameRequest[]) => {
-    try {
-      const { validateTileChange } = withBoardValidator(this.board);
-      const clickChanges = requests
-        .filter(e => e.type === "click")
-        .filter(this.isValidUser)
-        .map(({ connectionId, data }: IGameClickRequest) =>
-          data.map(({ y, x, value }) =>
-            newTileChange({
-              i: this.connectedUsers[connectionId].index,
-              productivity: value, // TODO
-              y,
-              x
-            })
-          )
-        )
-        .reduce((a, b) => a.concat(b), [])
-        .filter(validateTileChange);
-      const levelUpChanges = requests
-        .filter(e => e.type === "levelUp")
-        .filter(this.isValidUser)
-        .map(({ connectionId, data }: IGameLevelUpRequest) =>
-          data.map(({ y, x, value }) =>
-            newTileChange({
-              i: this.connectedUsers[connectionId].index,
-              productivity: value, // TODO
-              y,
-              x
-            })
-          )
-        )
-        .reduce((a, b) => a.concat(b), [])
-        .filter(validateTileChange);
-      const changes = [...clickChanges, ...levelUpChanges];
-      if (changes.length > 0) {
-        logHook(`Game apply changes`, this.gameId, JSON.stringify(changes));
-        this.board = applyChangesToBoard(this.board, changes);
+  private processChanges = async (requests: GameRequest[]) => {
+    const promises: Array<Promise<void>> = [];
+    for (const request of requests) {
+      if (!this.isValidUser(request)) {
+        continue;
       }
+      const user = this.connectedUsers[request.connectionId];
+      try {
+        const maybe = processChange({
+          request,
+          user,
+          board: this.board,
+          boardValidator: this.boardValidator,
+          network: this.networkSystem
+        });
+        if (maybe !== undefined) {
+          promises.push(maybe);
+        }
+      } catch (error) {
+        logger.error(`Error in processing change`, request, error);
+      }
+    }
+    if (promises.length === 0) {
+      return;
+    }
+    try {
+      await Promise.all(promises);
     } catch (error) {
-      logger.error(`Error in processing changes`, requests, error);
+      logger.error(`Error in awaiting updates`, error);
     }
   };
 
@@ -238,12 +214,7 @@ export default class Game {
       this.gameId,
       newbie,
       this.users
-    )(
-      broadcastNewbie(
-        Object.keys(this.connectedUsers).filter(each => each !== connectionId),
-        newbie
-      )
-    );
+    )(this.networkSystem.newbie(newbie));
   };
 
   private onLeave = ({ connectionId }: IGameConnectionIdRequest) => {
@@ -264,26 +235,8 @@ export default class Game {
       this.gameId,
       connectionId,
       this.users
-    )(
-      replyLoad(
-        connectionId,
-        this.users,
-        this.board,
-        this.ticker!.stage,
-        this.ticker!.age
-      )
-    );
+    )(this.networkSystem.load(user, this.ticker!.stage, this.ticker!.age));
   };
-
-  private sendEnergy = () => {
-    // TODO
-  };
-
-  private broadcastClick = () =>
-    this.clickBroadcast.broadcast({
-      newBoard: this.board,
-      connectionIds: this.users.filter(u => u.load).map(u => u.connectionId)
-    });
 
   private broadcastStage = (stage: GameStage, age: number) =>
     logHook(
@@ -292,7 +245,7 @@ export default class Game {
       this.users,
       stage,
       age
-    )(broadcastStage(Object.keys(this.connectedUsers), stage, age));
+    )(this.networkSystem.stage(stage, age));
 }
 
 const logHook = (...args: any[]) => {

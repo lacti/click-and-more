@@ -10,6 +10,7 @@ interface ILoadResponse {
 
   stage: GameStage;
   age: number;
+  energy: number;
 }
 
 export const replyLoad = (
@@ -17,7 +18,8 @@ export const replyLoad = (
   users: IGameUser[],
   board: Board,
   stage: GameStage,
-  age: number
+  age: number,
+  energy: number
 ) => {
   const replier = reply(connectionId);
   return replier<ILoadResponse>({
@@ -26,6 +28,7 @@ export const replyLoad = (
     users: users.map(gameUserToUser),
     board,
     stage,
-    age
+    age,
+    energy: Math.floor(energy)
   });
 };

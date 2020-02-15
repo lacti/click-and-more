@@ -3,28 +3,39 @@ export interface IClientLoadRequest {
   type: "load";
 }
 
-export interface IClientClickRequest {
-  type: "click";
-  data: Array<{
-    x: number;
-    y: number;
-    value: number;
-  }>;
+interface IPos {
+  x: number;
+  y: number;
 }
 
-export interface IClientLevelUpRequest {
-  type: "levelUp";
-  data: Array<{
-    x: number;
-    y: number;
-    value: number;
-  }>;
+export const oneTileActions = [
+  "new",
+  "defenceUp",
+  "offenceUp",
+  "productivityUp",
+  "attackRangeUp"
+];
+
+export interface IClientOneTileClickRequest extends IPos {
+  type: "new" | "defenceUp" | "offenceUp" | "productivityUp" | "attackRangeUp";
+  x: number;
+  y: number;
 }
 
-export type ClientRequest = IClientLoadRequest | IClientClickRequest | IClientLevelUpRequest;
+export const twoTilesActions = ["attack"];
+
+export interface IClientTwoTilesClickRequest {
+  type: "attack";
+  from: IPos;
+  to: IPos;
+}
+
+export type ClientRequest =
+  | IClientLoadRequest
+  | IClientOneTileClickRequest
+  | IClientTwoTilesClickRequest;
 
 export const validateClientRequest = (request: ClientRequest) =>
   !!request &&
   !!request.type &&
-  // TODO Types of message can be more generalized.
-  ["load", "click", "levelUp"].some(t => t === request.type);
+  ["load", ...oneTileActions, ...twoTilesActions].some(t => t === request.type);

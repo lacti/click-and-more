@@ -6,9 +6,11 @@ import {
   valueMapEquals
 } from "./valuemap";
 
-export interface ITileCore extends IValueMap {
+export interface ITileOwnership {
   i: number; // owner user index
 }
+
+export interface ITileCore extends IValueMap, ITileOwnership {}
 
 export const tileCoreEquals = (a: ITileCore, b: ITileCore): boolean =>
   a.i === b.i && valueMapEquals(a, b);
@@ -36,7 +38,7 @@ export const emptyTile = (): ITile => ({
   ...emptyValueMap()
 });
 
-export const baseTile = (userIndex): ITile => ({
+export const baseTile = (userIndex: number): ITile => ({
   ...emptyTile(),
   i: userIndex,
   ...baseValueMap()
