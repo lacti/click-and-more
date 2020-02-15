@@ -1,10 +1,11 @@
 import { IGameMember } from "../shared/actorRequest";
+import { oneTileActions, twoTilesActions } from "../shared/clientRequest";
 import {
   GameRequest,
-  IGameClickRequest,
   IGameConnectionIdRequest,
   IGameEnterRequest,
-  IGameLevelUpRequest
+  IGameOneTileClickRequest,
+  IGameTwoTilesClickRequest
 } from "../shared/gameRequest";
 import logger from "./logger";
 import {
@@ -169,40 +170,77 @@ export default class Game {
     }
   };
 
+  private requestAsIndexForm = ({
+    x,
+    y,
+    connectionId
+  }: {
+    x: number;
+    y: number;
+    connectionId: string;
+  }) => ({
+    i: this.connectedUsers[connectionId].index,
+    y,
+    x
+  });
+
   private processChanges = (requests: GameRequest[]) => {
     try {
-      const { validateTileChange } = withBoardValidator(this.board);
-      const clickChanges = requests
-        .filter(e => e.type === "click")
+      const {
+        validateTileNew,
+        validateTileUpgrade,
+        isTileMine,
+        isTileYours
+      } = withBoardValidator(this.board);
+
+      // TODO DESTROY EVERYTHING
+      const tileChanges = requests
+        .filter(e => oneTileActions.includes(e.type))
         .filter(this.isValidUser)
-        .map(({ connectionId, data }: IGameClickRequest) =>
-          data.map(({ y, x, value }) =>
-            newTileChange({
-              i: this.connectedUsers[connectionId].index,
-              productivity: value, // TODO
-              y,
-              x
-            })
-          )
+        .map((request: IGameOneTileClickRequest) => ({
+          ...this.requestAsIndexForm(request),
+          ...request
+        }))
+        .filter(request =>
+          request.type === "new"
+            ? validateTileNew(request)
+            : validateTileUpgrade(request)
         )
-        .reduce((a, b) => a.concat(b), [])
-        .filter(validateTileChange);
-      const levelUpChanges = requests
-        .filter(e => e.type === "levelUp")
+        .map(({ type, i, x, y }) =>
+          newTileChange({
+            i,
+            y,
+            x,
+            defence: type === "defenceUp" ? 1 : undefined,
+            offence: type === "offenceUp" ? 1 : undefined,
+            productivity: type === "productivityUp" ? 1 : undefined,
+            attackRange: type === "attackRangeUp" ? 1 : undefined
+          })
+        );
+
+      const attacks = requests
+        .filter(e => twoTilesActions.includes(e.type))
         .filter(this.isValidUser)
-        .map(({ connectionId, data }: IGameLevelUpRequest) =>
-          data.map(({ y, x, value }) =>
-            newTileChange({
-              i: this.connectedUsers[connectionId].index,
-              productivity: value, // TODO
-              y,
-              x
-            })
-          )
+        .map((request: IGameTwoTilesClickRequest) => ({
+          ...this.requestAsIndexForm({
+            connectionId: request.connectionId,
+            ...request.from
+          }),
+          ...request
+        }))
+        .filter(
+          request =>
+            isTileMine(request) && isTileYours({ i: request.i, ...request.to })
         )
-        .reduce((a, b) => a.concat(b), [])
-        .filter(validateTileChange);
-      const changes = [...clickChanges, ...levelUpChanges];
+        .map(({ connectionId, from, to }: IGameTwoTilesClickRequest) =>
+          newTileChange({
+            i: this.connectedUsers[connectionId].index,
+            offence: this.board[from.y][from.x].offence, // TODO
+            y: to.y,
+            x: to.x
+          })
+        );
+      const changes = [...tileChanges, ...attacks];
       if (changes.length > 0) {
         logHook(`Game apply changes`, this.gameId, JSON.stringify(changes));
         this.board = applyChangesToBoard(this.board, changes);

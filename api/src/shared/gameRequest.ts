@@ -1,7 +1,7 @@
 import {
-  IClientClickRequest,
-  IClientLevelUpRequest,
-  IClientLoadRequest
+  IClientLoadRequest,
+  IClientOneTileClickRequest,
+  IClientTwoTilesClickRequest
 } from "./clientRequest";
 
 export interface IGameConnectionIdRequest {
@@ -21,17 +21,17 @@ export interface IGameLoadRequest
   extends IClientLoadRequest,
     IGameConnectionIdRequest {}
 
-export interface IGameClickRequest
-  extends IClientClickRequest,
+export interface IGameOneTileClickRequest
+  extends IClientOneTileClickRequest,
     IGameConnectionIdRequest {}
 
-export interface IGameLevelUpRequest
-  extends IClientLevelUpRequest,
+export interface IGameTwoTilesClickRequest
+  extends IClientTwoTilesClickRequest,
     IGameConnectionIdRequest {}
 
 export type GameRequest =
   | IGameEnterRequest
   | IGameLeaveRequest
   | IGameLoadRequest
-  | IGameClickRequest
-  | IGameLevelUpRequest;
+  | IGameOneTileClickRequest
+  | IGameTwoTilesClickRequest;

@@ -3,6 +3,7 @@ import {
   emptyTile,
   IPos,
   ITile,
+  ITileOwnership,
   TileChange,
   tileCoreClone,
   TileSync,
@@ -119,7 +120,15 @@ export const withBoardValidator = (board: Board) => {
   const validateYx = (y: number, x: number) =>
     y >= 0 && y < boardHeight && x >= 0 && x < boardWidth;
 
-  const validateTileChange = ({ y, x, i }: TileChange) => {
+  type IOwnedPos = IPos & ITileOwnership;
+  const validateOwnership = (mine: boolean) => ({ y, x, i }: IOwnedPos) => {
+    if (!validateYx(y, x)) {
+      return false;
+    }
+    return board[y][x].i === i ? mine : !mine;
+  };
+
+  const validateTileChange = (mine: boolean) => ({ y, x, i }: IOwnedPos) => {
     if (!validateYx(y, x)) {
       return false;
     }
@@ -127,6 +136,10 @@ export const withBoardValidator = (board: Board) => {
     if (board[y][x].i === i) {
       return true;
     }
+    if (mine === false) {
+      return false;
+    }
+
     // Or that tile is near by my tile.
     const nearBy = [
       [1, 0],
@@ -139,7 +152,12 @@ export const withBoardValidator = (board: Board) => {
       .some(([ny, nx]) => board[ny][nx].i === i);
     return nearBy;
   };
-  return { validateTileChange };
+  return {
+    validateTileNew: validateTileChange(false),
+    validateTileUpgrade: validateTileChange(true),
+    isTileMine: validateOwnership(true),
+    isTileYours: validateOwnership(false)
+  };
 };
 
 export const isEliminated = (board: Board) =>
