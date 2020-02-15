@@ -17,7 +17,10 @@ export const reply = mem(
         Data: JSON.stringify(response)
       })
       .promise()
-      .then(() => true)
+      .then(() => {
+        logger.debug(`Reply`, connectionId, response);
+        return true;
+      })
       .catch(error => {
         logger.error(`Cannot reply to`, connectionId, response, error);
         return false;

@@ -1,3 +1,4 @@
+import logger from "../../logger";
 import { reply } from "./reply";
 
 export interface IRespondResult {
@@ -17,6 +18,11 @@ export const broadcast = <T extends { type: string }>(
           } as IRespondResult)
       )
     )
-  ).then(result =>
-    result.reduce((acc, cur) => Object.assign(acc, cur), {} as IRespondResult)
-  );
+  ).then(result => {
+    const map = result.reduce(
+      (acc, cur) => Object.assign(acc, cur),
+      {} as IRespondResult
+    );
+    logger.info(`Broadcast`, response, map);
+    return map;
+  });
