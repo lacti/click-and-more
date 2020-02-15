@@ -24,8 +24,11 @@ export class NetworkSystem {
   public end = () =>
     broadcastEnd(this.connectionIds, calculateScore(this.board));
 
-  public newbie = (newbie: IUser) =>
-    broadcastNewbie(this.connectionIds, newbie);
+  public newbie = (newbie: IGameUser) =>
+    broadcastNewbie(
+      this.connectionIds.filter(id => id !== newbie.connectionId),
+      { index: newbie.index, color: newbie.color }
+    );
 
   public load = (user: IGameUser, stage: GameStage, age: number) =>
     replyLoad(
