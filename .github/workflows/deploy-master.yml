@@ -1,4 +1,4 @@
-name: "Deploy all"
+name: "Deploy master"
 on:
   push:
     branches:
