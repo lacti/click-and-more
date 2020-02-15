@@ -1,6 +1,6 @@
 import { Board, calculateScore, IPos, TileSync } from "../model";
 import { GameStage } from "../model/stage";
-import { IGameUser, IUser } from "../model/user";
+import { IGameUser } from "../model/user";
 import {
   broadcastEnd,
   broadcastNewbie,
