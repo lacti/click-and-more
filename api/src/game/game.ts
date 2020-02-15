@@ -36,7 +36,6 @@ import { dropConnection } from "./response/drop";
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
-import { updateGrowing } from "./system/growing";
 
 // TODO How about choosing the size of board by the count of members?
 const boardHeight = 5;
@@ -208,8 +207,12 @@ export default class Game {
     const dt = (now - this.lastMillis) / 1000;
     this.lastMillis = now;
 
-    this.board = updateGrowing(this.board, dt);
+    this.updateWithDt(dt);
   };
+
+  private updateWithDt(_: number) {
+    // TODO
+  }
 
   private isValidUser = ({ connectionId }: IGameConnectionIdRequest) =>
     this.connectedUsers[connectionId] !== undefined;
