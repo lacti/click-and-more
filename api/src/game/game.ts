@@ -1,23 +1,17 @@
 import { IGameMember } from "../shared/actorRequest";
-import { oneTileActions, twoTilesActions } from "../shared/clientRequest";
 import {
   GameRequest,
   IGameConnectionIdRequest,
-  IGameEnterRequest,
-  IGameOneTileClickRequest,
-  IGameTwoTilesClickRequest
+  IGameEnterRequest
 } from "../shared/gameRequest";
 import logger from "./logger";
 import {
-  applyChangesToBoard,
   Board,
   calculateScore,
   IGameUser,
   isEliminated,
   newBoard,
-  newTileChange,
-  placeUsersToBoard,
-  withBoardValidator
+  placeUsersToBoard
 } from "./model";
 import {
   gameRunningSeconds,
@@ -26,6 +20,7 @@ import {
   minAgeToCheckIfEliminated
 } from "./model/constraints";
 import { GameStage } from "./model/stage";
+import processChange from "./processChange";
 import {
   broadcastEnd,
   broadcastNewbie,
@@ -38,6 +33,7 @@ import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
 import { getRandomColor } from "./support/utils";
 import { EnergySystem } from "./system/energy";
+import { BoardValidator } from "./system/validator";
 
 // TODO How about choosing the size of board by the count of members?
 const boardHeight = 5;
@@ -55,6 +51,7 @@ export default class Game {
   private ticker: Ticker | null;
 
   private energySystem: EnergySystem;
+  private boardValidator: BoardValidator;
 
   constructor(
     private readonly gameId: string,
@@ -62,6 +59,7 @@ export default class Game {
     private readonly pollRequests: () => Promise<GameRequest[]>
   ) {
     this.board = newBoard(boardHeight, boardWidth);
+    this.boardValidator = new BoardValidator(this.board);
     this.clickBroadcast = new ClickBroadcast(this.board);
 
     // Setup game context from members.
@@ -170,83 +168,22 @@ export default class Game {
     }
   };
 
-  private requestAsIndexForm = ({
-    x,
-    y,
-    connectionId
-  }: {
-    x: number;
-    y: number;
-    connectionId: string;
-  }) => ({
-    i: this.connectedUsers[connectionId].index,
-    y,
-    x
-  });
-
   private processChanges = (requests: GameRequest[]) => {
-    try {
-      const {
-        validateTileNew,
-        validateTileUpgrade,
-        isTileMine,
-        isTileYours
-      } = withBoardValidator(this.board);
-
-      // TODO DESTROY EVERYTHING
-      const tileChanges = requests
-        .filter(e => oneTileActions.includes(e.type))
-        .filter(this.isValidUser)
-        .map((request: IGameOneTileClickRequest) => ({
-          ...this.requestAsIndexForm(request),
-          ...request
-        }))
-        .filter(request =>
-          request.type === "new"
-            ? validateTileNew(request)
-            : validateTileUpgrade(request)
-        )
-        .map(({ type, i, x, y }) =>
-          newTileChange({
-            i,
-            y,
-            x,
-            defence: type === "defenceUp" ? 1 : undefined,
-            offence: type === "offenceUp" ? 1 : undefined,
-            productivity: type === "productivityUp" ? 1 : undefined,
-            attackRange: type === "attackRangeUp" ? 1 : undefined
-          })
-        );
-
-      const attacks = requests
-        .filter(e => twoTilesActions.includes(e.type))
-        .filter(this.isValidUser)
-        .map((request: IGameTwoTilesClickRequest) => ({
-          ...this.requestAsIndexForm({
-            connectionId: request.connectionId,
-            ...request.from
-          }),
-          ...request
-        }))
-        .filter(
-          request =>
-            isTileMine(request) && isTileYours({ i: request.i, ...request.to })
-        )
-        .map(({ connectionId, from, to }: IGameTwoTilesClickRequest) =>
-          newTileChange({
-            i: this.connectedUsers[connectionId].index,
-            offence: this.board[from.y][from.x].offence, // TODO
-            y: to.y,
-            x: to.x
-          })
-        );
-      const changes = [...tileChanges, ...attacks];
-      if (changes.length > 0) {
-        logHook(`Game apply changes`, this.gameId, JSON.stringify(changes));
-        this.board = applyChangesToBoard(this.board, changes);
+    for (const request of requests) {
+      if (!this.isValidUser(request)) {
+        continue;
       }
-    } catch (error) {
-      logger.error(`Error in processing changes`, requests, error);
+      const user = this.connectedUsers[request.connectionId];
+      try {
+        processChange({
+          request,
+          user,
+          board: this.board,
+          boardValidator: this.boardValidator
+        });
+      } catch (error) {
+        logger.error(`Error in processing change`, request, error);
+      }
     }
   };
 

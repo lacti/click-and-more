@@ -38,7 +38,7 @@ export const emptyTile = (): ITile => ({
   ...emptyValueMap()
 });
 
-export const baseTile = (userIndex): ITile => ({
+export const baseTile = (userIndex: number): ITile => ({
   ...emptyTile(),
   i: userIndex,
   ...baseValueMap()
