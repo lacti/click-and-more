@@ -183,9 +183,8 @@ function processAttack({
     return;
   }
 
-  const remainHp =
-    board[request.to.y][request.to.x].defence -
-    board[request.from.y][request.from.x].offence;
+  const damage = board[request.from.y][request.from.x].offence;
+  const remainHp = board[request.to.y][request.to.x].defence - damage;
   user.energy -= costToUpgradeAttackRange;
   if (remainHp > 0) {
     board[request.to.y][request.to.x].defence = remainHp;
@@ -202,5 +201,5 @@ function processAttack({
       board[request.to.y][request.to.x] = emptyTile();
     }
   }
-  return network.actOnTile(user, request.to.y, request.to.x);
+  return network.attack(user, request.from, request.to, damage);
 }

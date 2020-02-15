@@ -1,4 +1,4 @@
-import { Board, calculateScore, TileSync } from "../model";
+import { Board, calculateScore, IPos, TileSync } from "../model";
 import { GameStage } from "../model/stage";
 import { IGameUser, IUser } from "../model/user";
 import {
@@ -9,6 +9,7 @@ import {
   replyLoad,
   replyStage
 } from "../response";
+import { broadcastAttacked } from "../response/attack";
 
 export class NetworkSystem {
   constructor(
@@ -53,5 +54,12 @@ export class NetworkSystem {
     Promise.all([
       this.changed([{ ...this.board[y][x], y, x }]),
       this.energy(user)
+    ]);
+
+  public attack = (user: IGameUser, from: IPos, to: IPos, damage: number) =>
+    Promise.all([
+      this.changed([{ ...this.board[to.y][to.x], y: to.y, x: to.x }]),
+      this.energy(user),
+      broadcastAttacked(this.connectionIds, from, to, damage)
     ]);
 }
