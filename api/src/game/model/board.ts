@@ -93,16 +93,15 @@ export const diffBoards = (
     .filter(Boolean);
 
 export const calculateScore = (board: Board) => {
-  const score: { [index: number]: { tile: number; power: number } } = {};
+  const score: { [index: number]: { tile: number } } = {};
   board.forEach(row =>
     row
       .filter(tile => isValidUser(tile.i))
       .forEach(tile => {
         if (score[tile.i] === undefined) {
-          score[tile.i] = { tile: 0, power: 0 };
+          score[tile.i] = { tile: 0 };
         }
         ++score[tile.i].tile;
-        score[tile.i].power += tile.v;
       })
   );
   return score;
