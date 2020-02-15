@@ -85,7 +85,12 @@ export const diffBoards = (
         .map((oldTile, x) =>
           equals(oldTile, after[y][x])
             ? undefined
-            : { ...tileCoreClone(after[y][x]), y, x }
+            : {
+                ...tileCoreClone(after[y][x]),
+                y,
+                x,
+                v: after[y][x].offence // TODO Just for Test
+              }
         )
         .filter(Boolean)
     )

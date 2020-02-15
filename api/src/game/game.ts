@@ -181,7 +181,7 @@ export default class Game {
           data.map(({ y, x, value }) =>
             newTileChange({
               i: this.connectedUsers[connectionId].index,
-              v: value,
+              offence: value, // TODO
               y,
               x
             })
@@ -196,7 +196,7 @@ export default class Game {
           data.map(({ y, x, value }) =>
             newTileChange({
               i: this.connectedUsers[connectionId].index,
-              l: value,
+              offence: value, // TODO
               y,
               x
             })
