@@ -65,7 +65,7 @@ function processNew({
   ) {
     return;
   }
-  if (user.energy > costToBuyNewTile) {
+  if (user.energy < costToBuyNewTile) {
     return;
   }
 
@@ -84,7 +84,7 @@ function processUpgradeDefence({
   if (!boardValidator.isMyTile({ i: user.index, y: request.y, x: request.x })) {
     return;
   }
-  if (user.energy > costToUpgradeDefence) {
+  if (user.energy < costToUpgradeDefence) {
     return;
   }
 
@@ -103,7 +103,7 @@ function processUpgradeOffence({
   if (!boardValidator.isMyTile({ i: user.index, y: request.y, x: request.x })) {
     return;
   }
-  if (user.energy > costToUpgradeOffence) {
+  if (user.energy < costToUpgradeOffence) {
     return;
   }
 
@@ -122,7 +122,7 @@ function processUpgradeProductivity({
   if (!boardValidator.isMyTile({ i: user.index, y: request.y, x: request.x })) {
     return;
   }
-  if (user.energy > costToUpgradeProductivity) {
+  if (user.energy < costToUpgradeProductivity) {
     return;
   }
 
@@ -141,7 +141,7 @@ function processUpgradeAttackRange({
   if (!boardValidator.isMyTile({ i: user.index, y: request.y, x: request.x })) {
     return;
   }
-  if (user.energy > costToUpgradeAttackRange) {
+  if (user.energy < costToUpgradeAttackRange) {
     return;
   }
 
@@ -179,7 +179,7 @@ function processAttack({
   if (distance > board[request.from.y][request.from.x].attackRange) {
     return;
   }
-  if (user.energy > costToAttack) {
+  if (user.energy < costToAttack) {
     return;
   }
 
