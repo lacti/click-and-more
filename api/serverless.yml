@@ -1,5 +1,5 @@
 service:
-  name: click-and-more-api
+  name: ${self:custom.name}
 
 plugins:
   - serverless-webpack
@@ -37,6 +37,7 @@ provider:
               - ${self:custom.gameActorLambdaName}
 
 custom:
+  name: click-and-more-api${env:RELEASE_POSTFIX, ""}
   gameActorLambdaName: ${self:service.name}-${self:provider.stage}-game
   prune:
     automatic: true

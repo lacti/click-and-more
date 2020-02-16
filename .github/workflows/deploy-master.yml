@@ -35,3 +35,4 @@ jobs:
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           STAGE: ${{ secrets.STAGE }}
           WS_ENDPOINT: ${{ secrets.WS_ENDPOINT }}
+          RELEASE_POSTFIX: ${{ secrets.RELEASE_POSTFIX }}
