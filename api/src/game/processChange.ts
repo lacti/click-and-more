@@ -185,7 +185,7 @@ function processAttack({
 
   const damage = board[request.from.y][request.from.x].offence;
   const remainHp = board[request.to.y][request.to.x].defence - damage;
-  user.energy -= costToUpgradeAttackRange;
+  user.energy -= costToAttack;
   if (remainHp > 0) {
     board[request.to.y][request.to.x].defence = remainHp;
   } else {
