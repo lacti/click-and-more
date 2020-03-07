@@ -16,7 +16,4 @@ export const gameUserToUser = ({ index, color }: IGameUser) => ({
   color
 });
 
-export const hasConnectionId = (users: IGameUser[], connectionId: string) =>
-  users.some(u => u.connectionId === connectionId);
-
 export const isValidUser = (userIndex: number) => userIndex > 0;

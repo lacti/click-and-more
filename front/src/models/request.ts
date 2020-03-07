@@ -4,22 +4,19 @@ export interface ILoadRequest {
   type: "load";
 }
 
-export interface IClickRequest {
-  type: "click";
-  data: Array<
-    {
-      value: number;
-    } & IPos
-  >;
+export interface IClientOneTileClickRequest extends IPos {
+  type: "new" | "defenceUp" | "offenceUp" | "productivityUp" | "attackRangeUp";
+  x: number;
+  y: number;
 }
 
-export interface ILevelUpRequest {
-  type: "levelUp";
-  data: Array<
-    {
-      value: number;
-    } & IPos
-  >;
+export interface IClientTwoTilesClickRequest {
+  type: "attack";
+  from: IPos;
+  to: IPos;
 }
 
-export type GameRequest = ILoadRequest | IClickRequest | ILevelUpRequest;
+export type GameRequest =
+  | ILoadRequest
+  | IClientOneTileClickRequest
+  | IClientTwoTilesClickRequest;
