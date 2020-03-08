@@ -1,13 +1,4 @@
-import {
-  baseTile,
-  emptyTile,
-  IPos,
-  ITile,
-  TileChange,
-  tileCoreClone,
-  TileSync,
-  updateTile
-} from "./tile";
+import { baseTile, emptyTile, IPos, ITile } from "./tile";
 import { isValidUser } from "./user";
 
 export type BoardRow = ITile[];
@@ -23,14 +14,6 @@ export const newBoard = (height: number, width: number) =>
         .fill(0)
         .map(_2 => emptyTile())
     );
-
-export const resetOwnedTiles = (board: Board, userIndex: number): Board => [
-  ...board.map(row => [
-    ...row.map(tile => (tile.i === userIndex ? emptyTile() : tile))
-  ])
-];
-
-export const duplicateBoard = (board: Board) => board.map(row => [...row]);
 
 const getUserPositions = (board: Board): { [userIndex: number]: IPos } => {
   const maxX = board[0].length - 1;
@@ -52,46 +35,6 @@ export const placeUsersToBoard = (board: Board, userIndex: number) => {
     board[userPosition.y][userPosition.x] = baseTile(userIndex);
   }
 };
-
-export const applyChangesToBoard = (
-  board: Board,
-  changes: TileChange[]
-): Board => {
-  if (changes.length === 0) {
-    return board;
-  }
-  const copiedBoard = duplicateBoard(board);
-  changes.forEach(change => {
-    copiedBoard[change.y][change.x] = updateTile(
-      board[change.y][change.x],
-      change
-    );
-  });
-  return copiedBoard;
-};
-
-export const diffBoards = (
-  before: Board,
-  after: Board,
-  equals: (a: ITile, b: ITile) => boolean
-): TileSync[] =>
-  before
-    .map((row, y) =>
-      row
-        .map((oldTile, x) =>
-          equals(oldTile, after[y][x])
-            ? undefined
-            : {
-                ...tileCoreClone(after[y][x]),
-                y,
-                x,
-                v: after[y][x].productivity // TODO Just for Test
-              }
-        )
-        .filter(Boolean)
-    )
-    .reduce((a, b) => a.concat(b), [])
-    .filter(Boolean);
 
 export const calculateScore = (board: Board) => {
   const score: { [index: number]: { tile: number } } = {};

@@ -21,9 +21,10 @@ import {
 import { GameStage } from "./model/stage";
 import processChange from "./processChange";
 import { dropConnection } from "./response/drop";
+import env from "./support/env";
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
-import { getRandomColor } from "./support/utils";
+import { getRandomColors } from "./support/utils";
 import { EnergySystem } from "./system/energy";
 import { NetworkSystem } from "./system/network";
 import { BoardValidator } from "./system/validator";
@@ -54,11 +55,12 @@ export default class Game {
     this.board = newBoard(boardHeight, boardWidth);
 
     // Setup game context from members.
+    const colors = getRandomColors(members.length);
     this.users = members.map(
       (member, index): IGameUser => ({
         // userIndex should start from 1.
         index: index + 1,
-        color: getRandomColor(),
+        color: colors[index],
         connectionId: "",
         load: false,
         memberId: member.memberId,
@@ -119,7 +121,8 @@ export default class Game {
 
       if (
         this.ticker.age > minAgeToCheckIfEliminated &&
-        isEliminated(this.board)
+        isEliminated(this.board) &&
+        !env.isOffline
       ) {
         break;
       }
