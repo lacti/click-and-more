@@ -1,9 +1,15 @@
-export interface ITile {
-  i: number;
-  v: number;
-  l: number;
-  p: boolean;
+export interface IValueMap {
+  defence: number;
+  offence: number;
+  productivity: number;
+  attackRange: number;
 }
+
+export interface ITileOwnership {
+  i: number; // owner user index
+}
+
+export interface ITile extends IValueMap, ITileOwnership {}
 
 export type BoardRow = ITile[];
 export type Board = BoardRow[];
@@ -12,7 +18,8 @@ export interface IPos {
   y: number;
 }
 
-export type TileChange = ITile & IPos;
+export type TileSync = ITile & IPos;
+
 export type ColorMap = { [index: number]: string };
 
 export interface IUser {
@@ -29,7 +36,6 @@ export enum GameStage {
 export interface GameScore {
   [index: number]: {
     tile: number;
-    power: number;
   };
 }
 

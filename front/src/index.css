@@ -1,13 +1,87 @@
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+* {
+  text-align: center;
+  margin: auto;
+  overflow: none;
+  user-select: none;
+}
+
+.Tile {
+  min-width: 32px;
+  min-height: 32px;
+  text-align: center;
+  border: 3px dotted #fefefe;
+}
+.Head {
+  padding: 6px 0px;
+}
+.Head,
+.Board,
+.UpgradePanel,
+.Score {
+  width: 95vw;
+}
+
+.Board {
+  height: 75vh;
+  border: 3px double #bbbbbb;
+}
+
+.Age {
+  float: left;
+}
+.Energy {
+  float: right;
+}
+
+.Defence,
+.Offence,
+.Productivity,
+.AttackRange {
+  display: inline-block;
+  padding: 4px;
+}
+
+.UpgradePanel,
+.Score {
+  height: 18vh;
+  list-style: none;
+  border: 3px double #bbbbbb;
+  margin-top: 8px;
+}
+
+.UpgradePanel button {
+  width: 100%;
+  height: 100%;
+  background-color: lightyellow;
+  border: 1px double #bbbbbb;
+  outline: none;
+}
+.UpgradePanel button:active {
+  border: 1px double #333333;
+}
+
+@media only screen and (max-width: 600px) {
+  body {
+    font-size: 12px;
+  }
+  .Tile {
+    font-size: 9px;
+  }
+
+  .Defence,
+  .Offence,
+  .Productivity,
+  .AttackRange {
+    display: inline-block;
+    padding: 2px;
+  }
 }
