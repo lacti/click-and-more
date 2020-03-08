@@ -62,8 +62,8 @@ function onTileClick({ y, x }: TileClickAction) {
     }
   } else {
     // Is it the second click?
-    const previousTile = ctx.board[y][x];
-    const currentTile = ctx.board[ctx.selected.y][ctx.selected.x];
+    const currentTile = ctx.board[y][x];
+    const previousTile = ctx.board[ctx.selected.y][ctx.selected.x];
 
     // Is it the same tile with previous one?
     if (

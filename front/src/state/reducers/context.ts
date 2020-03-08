@@ -90,6 +90,10 @@ function onTileChangedBroadcast(
   context: GameContext,
   { data }: TileChangedBroadcast
 ) {
+  if (context.board.length === 0) {
+    return;
+  }
+
   for (const tile of data) {
     context.board[tile.y][tile.x] = { ...tile };
   }
