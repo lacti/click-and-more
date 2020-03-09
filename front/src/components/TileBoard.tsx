@@ -14,7 +14,7 @@ function TileBoard({
   selected: IPos | null;
 }) {
   return (
-    <table className="Board">
+    <table className="Board" style={{ borderColor: colors[me] }}>
       <tbody>
         {board.map((row, y) => (
           <TileRow
