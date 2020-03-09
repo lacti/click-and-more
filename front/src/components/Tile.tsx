@@ -37,7 +37,6 @@ function Tile({
       <span className="Offence" role="img" aria-label="Offence">
         ⚔️ {tile.offence}
       </span>
-      <br />
       <span className="Productivity" role="img" aria-label="Productivity">
         🏭 {tile.productivity}
       </span>

@@ -12,6 +12,7 @@ body {
   margin: auto;
   overflow: none;
   user-select: none;
+  font-size: 18px;
 }
 
 .Tile {
@@ -31,7 +32,7 @@ body {
 }
 
 .Board {
-  height: 75vh;
+  height: 70vh;
   border: 3px double #bbbbbb;
 }
 
@@ -40,6 +41,10 @@ body {
 }
 .Energy {
   float: right;
+}
+.Status {
+  float: right;
+  margin-right: 8px;
 }
 
 .Defence,
@@ -52,10 +57,10 @@ body {
 
 .UpgradePanel,
 .Score {
-  height: 18vh;
+  height: 16vh;
   list-style: none;
   border: 3px double #bbbbbb;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .UpgradePanel button {
@@ -70,18 +75,15 @@ body {
 }
 
 @media only screen and (max-width: 600px) {
-  body {
+  * {
     font-size: 12px;
-  }
-  .Tile {
-    font-size: 9px;
   }
 
   .Defence,
   .Offence,
   .Productivity,
   .AttackRange {
-    display: inline-block;
+    display: block;
     padding: 2px;
   }
 }

@@ -78,7 +78,7 @@ function onTileClick({ y, x }: TileClickAction) {
           x: x
         })
       );
-      ctx.selected = null;
+      ctx.selected = { y, x };
     } else if (
       previousTile.i === ctx.me &&
       currentTile.i !== ctx.me &&
@@ -92,6 +92,8 @@ function onTileClick({ y, x }: TileClickAction) {
           to: { y, x }
         })
       );
+      // Reset the cursor after attack.
+      ctx.selected = null;
     } else {
       ctx.selected = { y, x };
     }

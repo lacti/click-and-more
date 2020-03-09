@@ -13,6 +13,9 @@ export default function GameView({ context }: { context: GameContext }) {
         <span className="Energy" role="img" aria-label="Energy">
           ⚡ {context.energy}
         </span>
+        <span className="Status" style={{ color: context.colors[context.me] }}>
+          I'm ■
+        </span>
       </div>
       <TileBoard {...context} />
       <UpgradePanel {...context} />

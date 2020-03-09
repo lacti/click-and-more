@@ -4,10 +4,10 @@ import { GameContext } from "../models";
 import { enqueueAction } from "../state/action";
 
 function Score({ me, colors, score }: GameContext) {
-  const scores = Object.entries(score)
-    .map(([userIndex, { tile }]) => ({
+  const scores = Object.keys(colors)
+    .map(userIndex => ({
       userIndex: +userIndex,
-      tileCount: tile as number
+      tileCount: score[+userIndex] ? score[+userIndex].tile : 0
     }))
     .sort((a, b) => b.tileCount - a.tileCount);
 
@@ -23,8 +23,8 @@ function Score({ me, colors, score }: GameContext) {
           {scores.map(({ userIndex, tileCount }, index) => {
             return (
               <td key={userIndex}>
-                <span style={{ color: colors[userIndex] }}>▅</span> {tileCount}
-                <span>{index === 0 ? "🏆" : ""}</span>
+                <span style={{ color: colors[userIndex] }}>■</span> {tileCount}
+                <span>{index === 0 ? "🏆" : "😭"}</span>
               </td>
             );
           })}
