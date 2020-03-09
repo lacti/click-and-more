@@ -92,8 +92,6 @@ function onTileClick({ y, x }: TileClickAction) {
           to: { y, x }
         })
       );
-      // Reset the cursor after attack.
-      ctx.selected = null;
     } else {
       ctx.selected = { y, x };
     }

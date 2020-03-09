@@ -1,6 +1,7 @@
 import * as React from "react";
 import { GameContext, Board, IPos, ITile, UpgradeAction } from "../models";
 import { enqueueAction } from "../state/action";
+import * as costs from "../models/costs";
 
 export default function UpgradePanel({ me, board, selected }: GameContext) {
   if (selected === null) {
@@ -78,7 +79,7 @@ function UpgradeButtons({ pos: { y, x }, tile }: { pos: IPos; tile: ITile }) {
               value={tile.defence}
               y={y}
               x={x}
-              energy={10}
+              energy={costs.costToUpgradeDefence + (tile.defence - 1)}
             />
           </td>
           <td>
@@ -88,7 +89,7 @@ function UpgradeButtons({ pos: { y, x }, tile }: { pos: IPos; tile: ITile }) {
               value={tile.offence}
               y={y}
               x={x}
-              energy={20}
+              energy={costs.costToUpgradeOffence + (tile.offence - 1)}
             />
           </td>
         </tr>
@@ -100,7 +101,7 @@ function UpgradeButtons({ pos: { y, x }, tile }: { pos: IPos; tile: ITile }) {
               value={tile.productivity}
               y={y}
               x={x}
-              energy={5}
+              energy={costs.costToUpgradeProductivity + (tile.productivity - 1)}
             />
           </td>
           <td>
@@ -110,7 +111,9 @@ function UpgradeButtons({ pos: { y, x }, tile }: { pos: IPos; tile: ITile }) {
               value={tile.attackRange}
               y={y}
               x={x}
-              energy={25}
+              energy={
+                costs.costToUpgradeAttackRange + (tile.attackRange - 1) * 2
+              }
             />
           </td>
         </tr>
@@ -137,7 +140,7 @@ function BuyNewButton({ y, x }: IPos) {
               <span role="img" aria-label="NewLand">
                 🗺️
               </span>
-              Buy a new tile <EnergyConsume value={15} />
+              Buy a new tile <EnergyConsume value={costs.costToBuyNewTile} />
             </button>
           </td>
         </tr>

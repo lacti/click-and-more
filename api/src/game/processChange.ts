@@ -12,6 +12,7 @@ import {
   costToUpgradeOffence,
   costToUpgradeProductivity
 } from "./model/costs";
+import { IValueMap } from "./model/valuemap";
 import { NetworkSystem } from "./system/network";
 import { BoardValidator } from "./system/validator";
 
@@ -74,79 +75,76 @@ function processNew({
   return network.actOnTile(user, request.y, request.x);
 }
 
-function processUpgradeDefence({
-  user,
-  request,
-  board,
-  boardValidator,
-  network
-}: IProcessEnv<IGameOneTileClickRequest>): Promise<any> | undefined {
-  if (!boardValidator.isMyTile({ i: user.index, y: request.y, x: request.x })) {
-    return;
-  }
-  if (user.energy < costToUpgradeDefence) {
-    return;
-  }
-
-  board[request.y][request.x].defence++;
-  user.energy -= costToUpgradeDefence;
-  return network.actOnTile(user, request.y, request.x);
+function processUpgradeDefence(
+  env: IProcessEnv<IGameOneTileClickRequest>
+): Promise<any> | undefined {
+  return processUpgradeOne({
+    ...env,
+    baseCost: costToUpgradeDefence,
+    costMultiply: 1,
+    property: "defence"
+  });
 }
 
-function processUpgradeOffence({
-  user,
-  request,
-  board,
-  boardValidator,
-  network
-}: IProcessEnv<IGameOneTileClickRequest>): Promise<any> | undefined {
-  if (!boardValidator.isMyTile({ i: user.index, y: request.y, x: request.x })) {
-    return;
-  }
-  if (user.energy < costToUpgradeOffence) {
-    return;
-  }
-
-  board[request.y][request.x].offence++;
-  user.energy -= costToUpgradeOffence;
-  return network.actOnTile(user, request.y, request.x);
+function processUpgradeOffence(
+  env: IProcessEnv<IGameOneTileClickRequest>
+): Promise<any> | undefined {
+  return processUpgradeOne({
+    ...env,
+    baseCost: costToUpgradeOffence,
+    costMultiply: 1,
+    property: "offence"
+  });
 }
 
-function processUpgradeProductivity({
-  user,
-  request,
-  board,
-  boardValidator,
-  network
-}: IProcessEnv<IGameOneTileClickRequest>): Promise<any> | undefined {
-  if (!boardValidator.isMyTile({ i: user.index, y: request.y, x: request.x })) {
-    return;
-  }
-  if (user.energy < costToUpgradeProductivity) {
-    return;
-  }
-
-  board[request.y][request.x].productivity++;
-  user.energy -= costToUpgradeProductivity;
-  return network.actOnTile(user, request.y, request.x);
+function processUpgradeProductivity(
+  env: IProcessEnv<IGameOneTileClickRequest>
+): Promise<any> | undefined {
+  return processUpgradeOne({
+    ...env,
+    baseCost: costToUpgradeProductivity,
+    costMultiply: 1,
+    property: "productivity"
+  });
 }
 
-function processUpgradeAttackRange({
+function processUpgradeAttackRange(
+  env: IProcessEnv<IGameOneTileClickRequest>
+): Promise<any> | undefined {
+  return processUpgradeOne({
+    ...env,
+    baseCost: costToUpgradeAttackRange,
+    costMultiply: 2,
+    property: "attackRange"
+  });
+}
+
+function processUpgradeOne({
   user,
   request,
   board,
   boardValidator,
-  network
-}: IProcessEnv<IGameOneTileClickRequest>): Promise<any> | undefined {
+  network,
+
+  baseCost,
+  costMultiply,
+  property
+}: IProcessEnv<IGameOneTileClickRequest> & {
+  baseCost: number;
+  costMultiply: number;
+  property: keyof IValueMap;
+}): Promise<any> | undefined {
   if (!boardValidator.isMyTile({ i: user.index, y: request.y, x: request.x })) {
     return;
   }
-  if (user.energy < costToUpgradeAttackRange) {
+  const tile = board[request.y][request.x];
+  const cost = baseCost + (tile[property] - 1) * costMultiply;
+  if (user.energy < cost) {
     return;
   }
 
-  board[request.y][request.x].attackRange++;
-  user.energy -= costToUpgradeAttackRange;
+  tile[property]++;
+  user.energy -= cost;
   return network.actOnTile(user, request.y, request.x);
 }
 
@@ -179,13 +177,15 @@ function processAttack({
   if (distance > board[request.from.y][request.from.x].attackRange) {
     return;
   }
-  if (user.energy < costToAttack) {
+
+  const damage = board[request.from.y][request.from.x].offence;
+  const cost = distance * damage;
+  if (user.energy < cost) {
     return;
   }
 
-  const damage = board[request.from.y][request.from.x].offence;
   const remainHp = board[request.to.y][request.to.x].defence - damage;
-  user.energy -= costToAttack;
+  user.energy -= cost;
   if (remainHp > 0) {
     board[request.to.y][request.to.x].defence = remainHp;
   } else {
