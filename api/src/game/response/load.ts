@@ -1,4 +1,5 @@
 import { Board, gameUserToUser, IGameUser, IUser } from "../model";
+import { Costs, costs } from "../model/costs";
 import { GameStage } from "../model/stage";
 import { reply } from "./support/reply";
 
@@ -11,6 +12,7 @@ interface ILoadResponse {
   stage: GameStage;
   age: number;
   energy: number;
+  costs: Costs;
 }
 
 export const replyLoad = (
@@ -29,6 +31,7 @@ export const replyLoad = (
     board,
     stage,
     age,
-    energy: Math.floor(energy)
+    energy: Math.floor(energy),
+    costs
   });
 };

@@ -42,3 +42,17 @@ export interface GameScore {
 export type YxValue<V> = { [y: number]: { [x: number]: V } };
 export type YxCount = YxValue<number>;
 export type YxTile = YxValue<ITile>;
+
+export type Cost = {
+  base: number;
+  multiply: number;
+};
+
+export type Costs = {
+  newTile: Cost;
+  defence: Cost;
+  offence: Cost;
+  productivity: Cost;
+  attackRange: Cost;
+  attack: Cost;
+};
