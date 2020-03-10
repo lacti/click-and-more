@@ -46,7 +46,7 @@ function onLeaveBroadcast(context: GameContext, { leaver }: LeaveBroadcast) {
 
 function onLoadResponse(
   context: GameContext,
-  { age, board, users, me, stage, energy }: LoadResponse
+  { age, board, users, me, stage, energy, costs }: LoadResponse
 ) {
   context.age = age;
   context.board = board;
@@ -59,6 +59,7 @@ function onLoadResponse(
   context.me = me.index;
   context.stage = stage;
   context.energy = energy;
+  context.costs = costs;
 }
 
 function onStageBroadcast(

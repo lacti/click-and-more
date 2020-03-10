@@ -1,4 +1,12 @@
-import { IUser, Board, GameStage, GameScore, IPos, TileSync } from "./domain";
+import {
+  IUser,
+  Board,
+  GameStage,
+  GameScore,
+  IPos,
+  TileSync,
+  Costs
+} from "./domain";
 
 export interface EnterBroadcast {
   type: "enter";
@@ -19,6 +27,7 @@ export interface LoadResponse {
   stage: GameStage;
   age: number;
   energy: number;
+  costs: Costs;
 }
 
 export interface StageBroadcsat {

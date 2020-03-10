@@ -1,4 +1,4 @@
-import { ColorMap, Board, GameStage, GameScore, IPos } from "./domain";
+import { ColorMap, Board, GameStage, GameScore, IPos, Costs } from "./domain";
 
 export interface GameContext {
   me: number;
@@ -11,6 +11,7 @@ export interface GameContext {
   selected: IPos | null;
 
   score: GameScore;
+  costs: Costs;
 }
 
 export const newGameContext = (): GameContext => ({
@@ -21,5 +22,31 @@ export const newGameContext = (): GameContext => ({
   age: 0,
   energy: 0,
   selected: null,
-  score: {}
+  score: {},
+  costs: {
+    newTile: {
+      base: 15,
+      multiply: 0
+    },
+    defence: {
+      base: 5,
+      multiply: 0
+    },
+    offence: {
+      base: 20,
+      multiply: 1
+    },
+    productivity: {
+      base: 20,
+      multiply: 1
+    },
+    attackRange: {
+      base: 25,
+      multiply: 5
+    },
+    attack: {
+      base: 4,
+      multiply: 1
+    }
+  }
 });

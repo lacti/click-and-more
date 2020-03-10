@@ -4,14 +4,7 @@ import {
   IGameTwoTilesClickRequest
 } from "../shared/gameRequest";
 import { baseTile, Board, emptyTile, IGameUser } from "./model";
-import {
-  costToAttack,
-  costToBuyNewTile,
-  costToUpgradeAttackRange,
-  costToUpgradeDefence,
-  costToUpgradeOffence,
-  costToUpgradeProductivity
-} from "./model/costs";
+import { costs } from "./model/costs";
 import { IValueMap } from "./model/valuemap";
 import { NetworkSystem } from "./system/network";
 import { BoardValidator } from "./system/validator";
@@ -66,12 +59,18 @@ function processNew({
   ) {
     return;
   }
-  if (user.energy < costToBuyNewTile) {
+  const cost =
+    costs.newTile.base +
+    costs.newTile.multiply *
+      board
+        .map(row => row.filter(tile => tile.i === user.index).length)
+        .reduce((a, b) => a + b, 0);
+  if (user.energy < cost) {
     return;
   }
 
   board[request.y][request.x] = baseTile(user.index);
-  user.energy -= costToBuyNewTile;
+  user.energy -= cost;
   return network.actOnTile(user, request.y, request.x);
 }
 
@@ -80,8 +79,6 @@ function processUpgradeDefence(
 ): Promise<any> | undefined {
   return processUpgradeOne({
     ...env,
-    baseCost: costToUpgradeDefence,
-    costMultiply: 1,
     property: "defence"
   });
 }
@@ -91,8 +88,6 @@ function processUpgradeOffence(
 ): Promise<any> | undefined {
   return processUpgradeOne({
     ...env,
-    baseCost: costToUpgradeOffence,
-    costMultiply: 1,
     property: "offence"
   });
 }
@@ -102,8 +97,6 @@ function processUpgradeProductivity(
 ): Promise<any> | undefined {
   return processUpgradeOne({
     ...env,
-    baseCost: costToUpgradeProductivity,
-    costMultiply: 1,
     property: "productivity"
   });
 }
@@ -113,8 +106,6 @@ function processUpgradeAttackRange(
 ): Promise<any> | undefined {
   return processUpgradeOne({
     ...env,
-    baseCost: costToUpgradeAttackRange,
-    costMultiply: 2,
     property: "attackRange"
   });
 }
@@ -125,20 +116,16 @@ function processUpgradeOne({
   board,
   boardValidator,
   network,
-
-  baseCost,
-  costMultiply,
   property
 }: IProcessEnv<IGameOneTileClickRequest> & {
-  baseCost: number;
-  costMultiply: number;
   property: keyof IValueMap;
 }): Promise<any> | undefined {
   if (!boardValidator.isMyTile({ i: user.index, y: request.y, x: request.x })) {
     return;
   }
   const tile = board[request.y][request.x];
-  const cost = baseCost + (tile[property] - 1) * costMultiply;
+  const cost =
+    costs[property].base + (tile[property] - 1) * costs[property].multiply;
   if (user.energy < cost) {
     return;
   }
@@ -179,7 +166,7 @@ function processAttack({
   }
 
   const damage = board[request.from.y][request.from.x].offence;
-  const cost = distance * damage;
+  const cost = costs.attack.base + costs.attack.multiply * distance * damage;
   if (user.energy < cost) {
     return;
   }
