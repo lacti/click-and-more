@@ -24,7 +24,7 @@ export class AiSystem {
     private readonly board: Board,
     private readonly boardValidator: BoardValidator,
     users: IGameUser[],
-    tickInterval: number = 0.5
+    tickInterval: number = 1
   ) {
     this.tickTimer = new Timer(tickInterval);
 
