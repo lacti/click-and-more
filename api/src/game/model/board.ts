@@ -19,8 +19,8 @@ const getUserPositions = (board: Board): { [userIndex: number]: IPos } => {
   const maxX = board[0].length - 1;
   const maxY = board.length - 1;
   return {
-    1: { x: 0, y: 0 },
-    2: { x: maxX, y: maxY },
+    1: { x: maxX, y: maxY },
+    2: { x: 0, y: 0 },
     3: { x: 0, y: maxY },
     4: { x: maxX, y: 0 },
     5: { x: Math.floor(maxX / 2), y: 0 },

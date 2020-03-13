@@ -15,6 +15,7 @@ import {
 import {
   gameRunningSeconds,
   gameWaitSeconds,
+  initialEnergy,
   loopInterval,
   minAgeToCheckIfEliminated
 } from "./model/constraints";
@@ -24,7 +25,8 @@ import { dropConnection } from "./response/drop";
 import env from "./support/env";
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";
-import { getRandomColors } from "./support/utils";
+import { getPlayerColor } from "./support/utils";
+import { AiSystem } from "./system/ai";
 import { EnergySystem } from "./system/energy";
 import { NetworkSystem } from "./system/network";
 import { BoardValidator } from "./system/validator";
@@ -32,8 +34,6 @@ import { BoardValidator } from "./system/validator";
 // TODO How about choosing the size of board by the count of members?
 const boardHeight = 5;
 const boardWidth = 5;
-
-const initialEnergy = 20;
 
 export default class Game {
   private readonly users: IGameUser[];
@@ -43,6 +43,7 @@ export default class Game {
   private readonly energySystem: EnergySystem;
   private readonly networkSystem: NetworkSystem;
   private readonly boardValidator: BoardValidator;
+  private readonly ai: AiSystem;
 
   private lastMillis: number;
   private ticker: Ticker | null;
@@ -55,12 +56,11 @@ export default class Game {
     this.board = newBoard(boardHeight, boardWidth);
 
     // Setup game context from members.
-    const colors = getRandomColors(members.length);
     this.users = members.map(
       (member, index): IGameUser => ({
         // userIndex should start from 1.
         index: index + 1,
-        color: colors[index],
+        color: getPlayerColor(index),
         connectionId: "",
         load: false,
         memberId: member.memberId,
@@ -73,6 +73,11 @@ export default class Game {
     this.networkSystem = new NetworkSystem(this.users, this.board);
     this.boardValidator = new BoardValidator(this.board);
     this.energySystem = new EnergySystem(this.users);
+    this.ai = new AiSystem(this.board, this.boardValidator, this.users);
+    if (this.ai.activated) {
+      this.users.push(this.ai.user);
+      this.connectedUsers[this.ai.user.connectionId] = this.ai.user;
+    }
   }
 
   public run = async () => {
@@ -114,7 +119,7 @@ export default class Game {
       await this.processEnterLeaveLoad(requests);
 
       await this.processChanges(requests);
-      this.update();
+      await this.update();
 
       await this.ticker.checkAgeChanged(this.broadcastStage);
       await sleep(loopInterval);
@@ -192,17 +197,23 @@ export default class Game {
     }
   };
 
-  private update = () => {
+  private update = async () => {
     const now = Date.now();
     const dt = (now - this.lastMillis) / 1000;
     this.lastMillis = now;
 
-    this.updateWithDt(dt);
+    return this.updateWithDt(dt);
   };
 
-  private updateWithDt(dt: number) {
+  private updateWithDt = async (dt: number) => {
     this.energySystem.update(dt, this.board);
-  }
+
+    const aiRequest = this.ai.tryToDo(dt);
+    if (aiRequest !== null) {
+      await this.processEnterLeaveLoad([aiRequest]);
+      await this.processChanges([aiRequest]);
+    }
+  };
 
   private isValidUser = ({ connectionId }: IGameConnectionIdRequest) =>
     this.connectedUsers[connectionId] !== undefined;

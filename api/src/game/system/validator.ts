@@ -1,5 +1,12 @@
 import { Board } from "../model/board";
-import { IPos, ITileOwnership, noOwnerIndex } from "../model/tile";
+import {
+  IPos,
+  ITile,
+  ITileOwnership,
+  noOwnerIndex,
+  isMyTile,
+  isEnemyTile
+} from "../model/tile";
 
 type IOwnedPos = IPos & ITileOwnership;
 
@@ -35,9 +42,12 @@ export class BoardValidator {
     return this.board[y][x].i === noOwnerIndex;
   };
 
-  public isNearbyMyTile = ({ y, x, i }: IOwnedPos) => {
+  public findNearbyTiles = (
+    { y, x }: IPos,
+    filter: (tile: ITile) => boolean
+  ) => {
     if (!this.validateYx(y, x)) {
-      return false;
+      return [];
     }
     const nearBy = [
       [1, 0],
@@ -46,8 +56,22 @@ export class BoardValidator {
       [0, -1]
     ]
       .map(([dy, dx]) => [y + dy, x + dx])
-      .filter(([ny, nx]) => this.validateYx(ny, nx))
-      .some(([ny, nx]) => this.board[ny][nx].i === i);
+      .filter(
+        ([ny, nx]) => this.validateYx(ny, nx) && filter(this.board[ny][nx])
+      )
+      .map(([ny, nx]) => ({ y: ny, x: nx }));
     return nearBy;
+  };
+
+  public isNearbyTile = (pos: IPos, filter: (tile: ITile) => boolean) => {
+    return this.findNearbyTiles(pos, filter).length > 0;
+  };
+
+  public isNearbyMyTile = ({ y, x, i }: IOwnedPos) => {
+    return this.isNearbyTile({ y, x }, isMyTile(i));
+  };
+
+  public isNearbyEnemyTile = ({ y, x, i }: IOwnedPos) => {
+    return this.isNearbyTile({ y, x }, isEnemyTile(i));
   };
 }

@@ -25,3 +25,9 @@ export const baseTile = (userIndex: number): ITile => ({
   i: userIndex,
   ...baseValueMap()
 });
+
+export const isEnemyTile = (userIndex: number) => (tile: ITile) =>
+  tile.i !== userIndex && tile.i !== noOwnerIndex;
+
+export const isMyTile = (userIndex: number) => (tile: ITile) =>
+  tile.i === userIndex;
