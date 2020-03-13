@@ -16,7 +16,7 @@ enum AiStage {
 
 export class AiSystem {
   private readonly tickTimer: Timer;
-  private readonly aiUser: IGameUser | null;
+  private readonly aiUser: IGameUser | null = null;
 
   private stage: AiStage = AiStage.Enter;
 
