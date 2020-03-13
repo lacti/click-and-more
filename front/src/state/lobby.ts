@@ -5,7 +5,7 @@ import { GlobalStage, updateGlobalStage } from "./global";
 const authUrl = process.env.REACT_APP_AUTH_URL!;
 const lobbyUrl = process.env.REACT_APP_LOBBY_URL!;
 const gameApplicationId = window.location.href.includes("?single=1")
-  ? "abc"
+  ? "ca9a2697-229f-4569-a282-1044f3037a86"
   : process.env.REACT_APP_GAME_APPLICATION_ID!;
 const userName = "Clicker";
 
