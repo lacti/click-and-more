@@ -4,7 +4,11 @@ import {
   IGameTwoTilesClickRequest
 } from "../shared/gameRequest";
 import { baseTile, Board, emptyTile, IGameUser } from "./model";
-import { costs } from "./model/costs";
+import {
+  calculateAttackCost,
+  calculateNewTileCost,
+  calculateUpgradeCost
+} from "./model/costs";
 import { IValueMap } from "./model/valuemap";
 import { NetworkSystem } from "./system/network";
 import { BoardValidator } from "./system/validator";
@@ -59,12 +63,7 @@ function processNew({
   ) {
     return;
   }
-  const cost =
-    costs.newTile.base +
-    costs.newTile.multiply *
-      board
-        .map(row => row.filter(tile => tile.i === user.index).length)
-        .reduce((a, b) => a + b, 0);
+  const cost = calculateNewTileCost({ userIndex: user.index, board });
   if (user.energy < cost) {
     return;
   }
@@ -123,14 +122,17 @@ function processUpgradeOne({
   if (!boardValidator.isMyTile({ i: user.index, y: request.y, x: request.x })) {
     return;
   }
-  const tile = board[request.y][request.x];
-  const cost =
-    costs[property].base + (tile[property] - 1) * costs[property].multiply;
+  const cost = calculateUpgradeCost({
+    y: request.y,
+    x: request.x,
+    board,
+    property
+  });
   if (user.energy < cost) {
     return;
   }
 
-  tile[property]++;
+  board[request.y][request.x][property]++;
   user.energy -= cost;
   return network.actOnTile(user, request.y, request.x);
 }
@@ -166,7 +168,11 @@ function processAttack({
   }
 
   const damage = board[request.from.y][request.from.x].offence;
-  const cost = costs.attack.base + costs.attack.multiply * distance * damage;
+  const cost = calculateAttackCost({
+    from: request.from,
+    to: request.to,
+    board
+  });
   if (user.energy < cost) {
     return;
   }
