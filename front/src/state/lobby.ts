@@ -4,7 +4,9 @@ import { GlobalStage, updateGlobalStage } from "./global";
 
 const authUrl = process.env.REACT_APP_AUTH_URL!;
 const lobbyUrl = process.env.REACT_APP_LOBBY_URL!;
-const gameApplicationId = process.env.REACT_APP_GAME_APPLICATION_ID!;
+const gameApplicationId = window.location.href.includes("?single=1")
+  ? "abc"
+  : process.env.REACT_APP_GAME_APPLICATION_ID!;
 const userName = "Clicker";
 
 export default async function lobbyAuthenticate(): Promise<IGameStart> {
