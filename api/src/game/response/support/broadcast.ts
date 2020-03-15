@@ -1,4 +1,4 @@
-import logger from "../../logger";
+import { getLogger } from "../../logger";
 import { reply } from "./reply";
 
 export interface IRespondResult {
@@ -23,6 +23,6 @@ export const broadcast = <T extends { type: string }>(
       (acc, cur) => Object.assign(acc, cur),
       {} as IRespondResult
     );
-    logger.info(`Broadcast`, response, map);
+    getLogger().info(`Broadcast`, response, map);
     return map;
   });

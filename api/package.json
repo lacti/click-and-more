@@ -12,9 +12,11 @@
     "@yingyeothon/actor-system": "^0.2.4",
     "@yingyeothon/actor-system-redis-support": "^0.2.4",
     "@yingyeothon/aws-apigateway-management-api": "^2.536.0",
-    "@yingyeothon/logger": "^0.2.1",
+    "@yingyeothon/logger": "^0.2.2",
+    "@yingyeothon/logger-s3": "^0.2.3",
     "@yingyeothon/naive-redis": "^0.1.3",
     "mem": "^5.1.1",
+    "serialize-error": "^6.0.0",
     "source-map-support": "^0.5.10",
     "uuid": "^3.3.3"
   },

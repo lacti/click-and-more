@@ -1008,10 +1008,24 @@
   resolved "https://registry.yarnpkg.com/@yingyeothon/codec/-/codec-0.2.1.tgz#d4572e984d383b7842c13fa92dcf19fa860e6043"
   integrity sha512-CdhqPlxeIk1V0JJNv/GrGcCM4Hi8XKflXSwZv5VeMQaNJ8eIOcqmPDxq20BPqhbIAYGxRzqhK7tT3bMA7w46kQ==
 
-"@yingyeothon/logger@^0.2.0", "@yingyeothon/logger@^0.2.1":
+"@yingyeothon/logger-s3@^0.2.3":
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/@yingyeothon/logger-s3/-/logger-s3-0.2.3.tgz#24664f8920a5fb566138521016cb1ddd1c1274a6"
+  integrity sha512-5Pc/jP/U53XBTzjnxkak8jv6iPOyE0P8btftt4FtsYUvbxALsp/uNUtvQHddH5gKo0s6cZzxngX6uYHyzi5SbQ==
+  dependencies:
+    "@yingyeothon/logger" "^0.2.2"
+    "@yingyeothon/s3-cache-bridge-client" "^1.0.2"
+    serialize-error "^5.0.0"
+
+"@yingyeothon/logger@^0.2.0":
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/@yingyeothon/logger/-/logger-0.2.1.tgz#6f8c1e40146115b80213c50e3ef0c9a8169bb8bb"
   integrity sha512-CYxTjN21POUGQTAHEz04B5yxF4+W3BDAYA52lTJcXlcYaOn2APtjEUrMeB6+HPC5O41BCPfikzAyNE6V83AmKg==
+
+"@yingyeothon/logger@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@yingyeothon/logger/-/logger-0.2.2.tgz#f5271615b5082e76189aecf7c70d4f94b7384876"
+  integrity sha512-fmQVAt+fESpvpB4TXALhdTJAekYDw+aEvvQ2fVR9tuYWbcnXshNx3NEkr5L2xwcivUre91AmuXBLF1nePD3Ryw==
 
 "@yingyeothon/naive-redis@^0.1.3":
   version "0.1.3"
@@ -1024,6 +1038,13 @@
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/@yingyeothon/naive-socket/-/naive-socket-0.2.2.tgz#6463518c00a3099174aec0f49d1872fe243e4a89"
   integrity sha512-+Er/XLAjU7Mfaa9bVvzEgXVnV0oRMWHMayGhdoGqvZxEVir2yQVtwCsKQfpzHouRJfm7L8l6GLRlbn/52ZBKBg==
+
+"@yingyeothon/s3-cache-bridge-client@^1.0.2":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@yingyeothon/s3-cache-bridge-client/-/s3-cache-bridge-client-1.0.5.tgz#6d9cfcd3ca01739d28f1712a983715d0d103887e"
+  integrity sha512-/P/nw39sLU7Y53DzfBz2jOTqAh7LveICosZjvis+2RSvP0F6RynwVsPni8kkWNGMovfiCfICq1mz4F+LMC2mOw==
+  dependencies:
+    get-stream "^5.1.0"
 
 abab@^2.0.0:
   version "2.0.2"
@@ -6884,6 +6905,20 @@ send@0.17.1:
     range-parser "~1.2.1"
     statuses "~1.5.0"
 
+serialize-error@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/serialize-error/-/serialize-error-5.0.0.tgz#a7ebbcdb03a5d71a6ed8461ffe0fc1a1afed62ac"
+  integrity sha512-/VtpuyzYf82mHYTtI4QKtwHa79vAdU5OQpNPAmE/0UDdlGT0ZxHwC+J6gXkw29wwoVI8fMPsfcVHOwXtUQYYQA==
+  dependencies:
+    type-fest "^0.8.0"
+
+serialize-error@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/serialize-error/-/serialize-error-6.0.0.tgz#ccfb887a1dd1c48d6d52d7863b92544331fd752b"
+  integrity sha512-3vmBkMZLQO+BR4RPHcyRGdE09XCF6cvxzk2N2qn8Er3F91cy8Qt7VvEbZBOpaL53qsBbe2cFOefU6tRY6WDelA==
+  dependencies:
+    type-fest "^0.12.0"
+
 serialize-javascript@^2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-2.1.2.tgz#ecec53b0e0317bdc95ef76ab7074b7384785fa61"
@@ -7847,6 +7882,11 @@ type-check@~0.3.2:
   dependencies:
     prelude-ls "~1.1.2"
 
+type-fest@^0.12.0:
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.12.0.tgz#f57a27ab81c68d136a51fd71467eff94157fa1ee"
+  integrity sha512-53RyidyjvkGpnWPMF9bQgFtWp+Sl8O2Rp13VavmJgfAP9WWG6q6TkrKU8iyJdnwnfgHI6k2hTlgqH4aSdjoTbg==
+
 type-fest@^0.3.0:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.3.1.tgz#63d00d204e059474fe5e1b7c011112bbd1dc29e1"
@@ -7856,6 +7896,11 @@ type-fest@^0.5.2:
   version "0.5.2"
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.5.2.tgz#d6ef42a0356c6cd45f49485c3b6281fc148e48a2"
   integrity sha512-DWkS49EQKVX//Tbupb9TFa19c7+MK1XmzkrZUR8TAktmE/DizXoaoJV6TZ/tSIPXipqNiRI6CyAe7x69Jb6RSw==
+
+type-fest@^0.8.0:
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.8.1.tgz#09e249ebde851d3b1e48d27c105444667f17b83d"
+  integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
 type-is@~1.6.17, type-is@~1.6.18:
   version "1.6.18"

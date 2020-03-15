@@ -1,23 +1,25 @@
 import actorRedisPush from "@yingyeothon/actor-system-redis-support/lib/queue/push";
 import actorEnqueue from "@yingyeothon/actor-system/lib/actor/enqueue";
-import { ConsoleLogger } from "@yingyeothon/logger";
 import redisGet from "@yingyeothon/naive-redis/lib/get";
 import redisSet from "@yingyeothon/naive-redis/lib/set";
 import { APIGatewayProxyHandler } from "aws-lambda";
 import { loadActorStartEvent } from "../shared/actorRequest";
 import actorSubsysKeys from "../shared/actorSubsysKeys";
+import { handleWithLogger } from "../shared/logger";
 import env from "./support/env";
 import responses from "./support/responses";
 import useRedis from "./support/useRedis";
 
 const expirationMillis = 900 * 1000;
-const logger = new ConsoleLogger(`debug`);
 
-export const handle: APIGatewayProxyHandler = async event => {
+export const handle: APIGatewayProxyHandler = handleWithLogger({
+  handlerName: "connect"
+})(async ({ event, logger }) => {
   const { connectionId } = event.requestContext;
+
   const getParameter = (key: string) =>
     event.headers[key] ?? (event.queryStringParameters ?? {})[key];
-  return useRedis(async redisConnection => {
+  const response = await useRedis(async redisConnection => {
     // A client should send a "X-GAME-ID" via HTTP Header.
     const gameId = getParameter("x-game-id");
     const memberId = getParameter("x-member-id");
@@ -27,12 +29,14 @@ export const handle: APIGatewayProxyHandler = async event => {
       logger.error(`Invalid gameId from connection`, connectionId);
       return responses.NotFound;
     }
+    logger.updateSystemId(gameId);
+
     const startEvent = await loadActorStartEvent({
       gameId,
       get: key => redisGet(redisConnection, key)
     });
     if (startEvent === null) {
-      logger.error(`Invalid game context from gameId`, gameId);
+      logger.error(`Invalid game context from gameId`);
       return responses.NotFound;
     }
     if (startEvent.members.every(m => m.memberId !== memberId)) {
@@ -65,7 +69,8 @@ export const handle: APIGatewayProxyHandler = async event => {
         }
       }
     );
-    logger.info(`Game logged`, gameId, connectionId);
+    logger.info(`Game logged`, connectionId);
     return responses.OK;
   });
-};
+  return response;
+});

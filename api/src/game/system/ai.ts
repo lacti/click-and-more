@@ -1,5 +1,5 @@
 import { GameRequest } from "../../shared/gameRequest";
-import logger from "../logger";
+import { getLogger } from "../logger";
 import { Board, IGameUser, isEnemyTile } from "../model";
 import { initialEnergy } from "../model/constraints";
 import { calculateNewTileCost, calculateUpgradeCost } from "../model/costs";
@@ -31,7 +31,7 @@ export class AiSystem {
     // Activate AI.
     if (users.length < 2) {
       this.aiUser = newAiUser(users);
-      logger.info("AiSystem is activated");
+      getLogger().info("AiSystem is activated");
     }
   }
 
@@ -66,7 +66,7 @@ export class AiSystem {
       };
     }
 
-    logger.debug("AiSystem", "Ai turn!");
+    getLogger().debug("AiSystem", "Ai turn!");
     const height = this.board.length;
     const width = this.board[0].length;
     let remainCount = height * width;
@@ -106,7 +106,7 @@ export class AiSystem {
         board: this.board
       }) <= this.aiUser.energy
     ) {
-      logger.info("AiSystem", "New a tile", { y, x });
+      getLogger().info("AiSystem", "New a tile", { y, x });
       return {
         type: "new",
         connectionId: this.aiUser.connectionId,
@@ -126,7 +126,7 @@ export class AiSystem {
       )[0];
       if (maybeEnemyPos !== undefined) {
         if (this.dice(0.9)) {
-          logger.info("AiSystem", "Attack", { y, x }, maybeEnemyPos);
+          getLogger().info("AiSystem", "Attack", { y, x }, maybeEnemyPos);
           // Attack near enemy.
           return {
             type: "attack",
@@ -142,7 +142,7 @@ export class AiSystem {
             property: "defence"
           }) <= this.aiUser.energy
         ) {
-          logger.info("AiSystem", "Upgrade defence", { y, x });
+          getLogger().info("AiSystem", "Upgrade defence", { y, x });
           return {
             type: "defenceUp",
             connectionId: this.aiUser.connectionId,
@@ -164,7 +164,7 @@ export class AiSystem {
         property: "productivity"
       })
     ) {
-      logger.info("AiSystem", "Upgrade productivity", { y, x });
+      getLogger().info("AiSystem", "Upgrade productivity", { y, x });
       return {
         type: "productivityUp",
         connectionId: this.aiUser.connectionId,

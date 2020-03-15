@@ -4,7 +4,7 @@ import {
   IGameConnectionIdRequest,
   IGameEnterRequest
 } from "../shared/gameRequest";
-import logger from "./logger";
+import { getLogger } from "./logger";
 import {
   Board,
   IGameUser,
@@ -87,13 +87,13 @@ export default class Game {
         await this.stageRunning();
       }
     } catch (error) {
-      logger.error(`Error in game logic`, error);
+      getLogger().error(`Error in game logic`, error);
     }
     await this.stageEnd();
   };
 
   private stageWait = async () => {
-    logger.info(`Game WAIT-stage`, this.gameId, this.users);
+    getLogger().info(`Game WAIT-stage`, this.gameId, this.users);
 
     this.ticker = new Ticker(GameStage.Wait, gameWaitSeconds * 1000);
     while (this.ticker.isAlive()) {
@@ -110,7 +110,7 @@ export default class Game {
   };
 
   private stageRunning = async () => {
-    logger.info(`Game RUNNING-stage`, this.gameId, this.users);
+    getLogger().info(`Game RUNNING-stage`, this.gameId, this.users);
 
     this.lastMillis = Date.now();
     this.ticker = new Ticker(GameStage.Running, gameRunningSeconds * 1000);
@@ -135,7 +135,7 @@ export default class Game {
   };
 
   private stageEnd = async () => {
-    logger.info(`Game END-stage`, this.gameId);
+    getLogger().info(`Game END-stage`, this.gameId);
     await this.networkSystem.end();
     await Promise.all(Object.keys(this.connectedUsers).map(dropConnection));
   };
@@ -160,7 +160,7 @@ export default class Game {
             break;
         }
       } catch (error) {
-        logger.error(`Error in request`, request, error);
+        getLogger().error(`Error in request`, request, error);
       }
     }
   };
@@ -184,7 +184,7 @@ export default class Game {
           promises.push(maybe);
         }
       } catch (error) {
-        logger.error(`Error in processing change`, request, error);
+        getLogger().error(`Error in processing change`, request, error);
       }
     }
     if (promises.length === 0) {
@@ -193,7 +193,7 @@ export default class Game {
     try {
       await Promise.all(promises);
     } catch (error) {
-      logger.error(`Error in awaiting updates`, error);
+      getLogger().error(`Error in awaiting updates`, error);
     }
   };
 
@@ -264,6 +264,6 @@ export default class Game {
 }
 
 const logHook = (...args: any[]) => {
-  logger.debug(...args);
+  getLogger().debug(...args);
   return <T>(next: T) => next;
 };

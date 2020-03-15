@@ -1,7 +1,11 @@
-import { ConsoleLogger } from "@yingyeothon/logger";
+import { Logger } from "../shared/logger";
 
-const logger = new ConsoleLogger(
-  process.env.STAGE === "production" ? `info` : `debug`
-);
+let globalLogger: Logger | null;
 
-export default logger;
+export function setLogger(logger: Logger) {
+  globalLogger = logger;
+}
+
+export function getLogger() {
+  return globalLogger!;
+}

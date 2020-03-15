@@ -1,6 +1,6 @@
 import { ApiGatewayManagementApi } from "aws-sdk";
 import mem from "mem";
-import logger from "../../logger";
+import { getLogger } from "../../logger";
 import env from "../../support/env";
 
 export const FakeConnectionId = `__FAKE_CONNECTION_ID__`;
@@ -22,11 +22,11 @@ export const reply = mem(
           })
           .promise()
           .then(() => {
-            logger.debug(`Reply`, connectionId, response);
+            getLogger().debug(`Reply`, connectionId, response);
             return true;
           })
           .catch(error => {
-            logger.error(`Cannot reply to`, connectionId, response, error);
+            getLogger().error(`Cannot reply to`, connectionId, response, error);
             return false;
           })
 );

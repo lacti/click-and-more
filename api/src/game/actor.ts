@@ -1,5 +1,4 @@
 import actorEventLoop from "@yingyeothon/actor-system/lib/actor/eventLoop";
-import { ConsoleLogger } from "@yingyeothon/logger";
 import redisDel from "@yingyeothon/naive-redis/lib/del";
 import redisSet from "@yingyeothon/naive-redis/lib/set";
 import { Handler } from "aws-lambda";
@@ -10,14 +9,23 @@ import {
   saveActorStartEvent
 } from "../shared/actorRequest";
 import { GameRequest } from "../shared/gameRequest";
+import { newLogger } from "../shared/logger";
 import actorSubsys from "./actorSubsys";
 import Game from "./game";
+import { setLogger } from "./logger";
 import { gameAliveSeconds } from "./model/constraints";
 import redisConnection from "./redisConnection";
 
-const logger = new ConsoleLogger(`debug`);
+export const handle: Handler<IGameActorStartEvent, void> = async (
+  event,
+  context
+) => {
+  const logger = newLogger({
+    handlerName: "game",
+    lambdaId: context.awsRequestId
+  });
+  setLogger(logger);
 
-export const handle: Handler<IGameActorStartEvent, void> = async event => {
   logger.debug(`Start a new game lambda`, event);
 
   const { gameId, members } = event;
@@ -66,4 +74,7 @@ export const handle: Handler<IGameActorStartEvent, void> = async event => {
       });
     }
   });
+
+  // Flush all logs.
+  await logger.flush();
 };

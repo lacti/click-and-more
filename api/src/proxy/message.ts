@@ -1,21 +1,22 @@
 import actorRedisPush from "@yingyeothon/actor-system-redis-support/lib/queue/push";
 import actorEnqueue from "@yingyeothon/actor-system/lib/actor/enqueue";
-import { ConsoleLogger } from "@yingyeothon/logger";
 import redisConnect from "@yingyeothon/naive-redis/lib/connection";
 import redisGet from "@yingyeothon/naive-redis/lib/get";
 import { APIGatewayProxyHandler } from "aws-lambda";
 import actorSubsysKeys from "../shared/actorSubsysKeys";
 import { ClientRequest, validateClientRequest } from "../shared/clientRequest";
+import { handleWithLogger } from "../shared/logger";
 import env from "./support/env";
 import responses from "./support/responses";
 
-const logger = new ConsoleLogger(`debug`);
 const redisConnection = redisConnect({
   host: env.redisHost,
   password: env.redisPassword
 });
 
-export const handle: APIGatewayProxyHandler = async event => {
+export const handle: APIGatewayProxyHandler = handleWithLogger({
+  handlerName: "message"
+})(async ({ event, logger }) => {
   const connectionId = event.requestContext.connectionId;
 
   // Parse and validate a message from the client.
@@ -35,7 +36,9 @@ export const handle: APIGatewayProxyHandler = async event => {
     redisConnection,
     env.redisKeyPrefixOfConnectionIdAndGameID + connectionId
   );
-  logger.info(`Game id`, connectionId, gameId);
+  logger.updateSystemId(gameId);
+
+  logger.info(`Game id`, connectionId);
   if (!gameId) {
     logger.error(`No GameID for connection[${connectionId}]`);
     return responses.NotFound;
@@ -54,6 +57,6 @@ export const handle: APIGatewayProxyHandler = async event => {
     },
     { item: { ...request, connectionId } }
   );
-  logger.info(`Game message sent`, connectionId, gameId, request);
+  logger.info(`Game message sent`, connectionId, request);
   return responses.OK;
-};
+});
