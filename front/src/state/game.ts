@@ -1,9 +1,11 @@
+import copy from "fast-copy";
 import {
   IGameStart,
   GameResponse,
   GameStage,
   GameRequest,
-  newGameContext
+  newGameContext,
+  ResponseRecord
 } from "../models";
 import { enqueueAction } from "./action";
 import sleep from "../utils/sleep";
@@ -28,6 +30,8 @@ export default function startGameStateMachine(start: IGameStart) {
     currentGameId: start.gameId
   });
   const gameSocket = new WebSocket(connectionUrl);
+  const records: ResponseRecord[] = [];
+  const startTime = Date.now();
 
   function onThisGame<Args extends any[]>(work: (...args: Args) => void) {
     return (...args: Args) => {
@@ -40,8 +44,12 @@ export default function startGameStateMachine(start: IGameStart) {
   }
 
   function sendRequest(request: GameRequest) {
-    console.info("Send a message into the server", start.gameId, request);
-    gameSocket.send(JSON.stringify(request));
+    if (start.observer && request.type !== "load") {
+      console.info("Observer cannot send a message", start.gameId, request);
+    } else {
+      console.info("Send a message into the server", start.gameId, request);
+      gameSocket.send(JSON.stringify(request));
+    }
   }
 
   function onSocketOpen() {
@@ -100,6 +108,8 @@ export default function startGameStateMachine(start: IGameStart) {
         type: "serverResponse",
         payload: response
       });
+      records.push({ ...copy(response), _time: Date.now() - startTime });
+
       if (response.type === "stage") {
         if (
           response.stage === GameStage.Running &&
@@ -107,10 +117,6 @@ export default function startGameStateMachine(start: IGameStart) {
         ) {
           console.info("Game is starting");
           updateGlobalStage(GlobalStage.GameRunning);
-        } else if (
-          response.stage === GameStage.End &&
-          getGlobalStage() !== GlobalStage.GameEnd
-        ) {
         }
       }
       if (response.type === "end") {
@@ -121,6 +127,8 @@ export default function startGameStateMachine(start: IGameStart) {
             gameSocket.close();
           }
         });
+        console.log(records);
+        console.log(JSON.stringify(records));
       }
     } catch (error) {
       // TODO Are we ok?

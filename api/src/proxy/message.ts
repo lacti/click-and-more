@@ -33,7 +33,7 @@ export const handle: APIGatewayProxyHandler = async event => {
   // Read gameId related this connectionId.
   const gameId: string | null = await redisGet(
     redisConnection,
-    env.redisKeyPrefixOfConnectionIdAndGameID + connectionId
+    env.redisKeyPrefixOfConnectionIdAndGameId + connectionId
   );
   logger.info(`Game id`, connectionId, gameId);
   if (!gameId) {

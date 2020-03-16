@@ -7,6 +7,7 @@ import {
 import logger from "./logger";
 import {
   Board,
+  IGameObserver,
   IGameUser,
   isEliminated,
   newBoard,
@@ -37,6 +38,7 @@ const boardWidth = 5;
 
 export default class Game {
   private readonly users: IGameUser[];
+  private readonly observers: IGameObserver[];
   private readonly connectedUsers: { [connectionId: string]: IGameUser } = {};
   private readonly board: Board;
 
@@ -56,21 +58,35 @@ export default class Game {
     this.board = newBoard(boardHeight, boardWidth);
 
     // Setup game context from members.
-    this.users = members.map(
-      (member, index): IGameUser => ({
-        // userIndex should start from 1.
-        index: index + 1,
-        color: getPlayerColor(index),
-        connectionId: "",
-        load: false,
-        memberId: member.memberId,
+    this.users = members
+      .filter(member => !member.observer)
+      .map(
+        (member, index): IGameUser => ({
+          // userIndex should start from 1.
+          index: index + 1,
+          color: getPlayerColor(index),
+          connectionId: "",
+          load: false,
+          memberId: member.memberId,
 
-        energy: initialEnergy
-      })
-    );
+          energy: initialEnergy
+        })
+      );
+    this.observers = members
+      .filter(member => member.observer)
+      .map(
+        (member): IGameObserver => ({
+          memberId: member.memberId,
+          connectionId: ""
+        })
+      );
 
     // Initialize other systems.
-    this.networkSystem = new NetworkSystem(this.users, this.board);
+    this.networkSystem = new NetworkSystem(
+      this.users,
+      this.observers,
+      this.board
+    );
     this.boardValidator = new BoardValidator(this.board);
     this.energySystem = new EnergySystem(this.users);
     this.ai = new AiSystem(this.board, this.boardValidator, this.users);
@@ -149,14 +165,10 @@ export default class Game {
             await this.onEnter(request);
             break;
           case "leave":
-            if (this.isValidUser(request)) {
-              this.onLeave(request);
-            }
+            this.onLeave(request);
             break;
           case "load":
-            if (this.isValidUser(request)) {
-              await this.onLoad(request);
-            }
+            await this.onLoad(request);
             break;
         }
       } catch (error) {
@@ -220,37 +232,63 @@ export default class Game {
 
   private onEnter = ({ connectionId, memberId }: IGameEnterRequest) => {
     const newbie = this.users.find(u => u.memberId === memberId);
-    newbie.connectionId = connectionId;
-    newbie.load = false;
+    const observer = this.observers.find(o => o.memberId === memberId);
+    if (observer) {
+      observer.connectionId = connectionId;
+    } else if (newbie) {
+      newbie.connectionId = connectionId;
+      newbie.load = false;
 
-    this.connectedUsers[connectionId] = newbie;
-    return logHook(
-      `Game newbie`,
-      this.gameId,
-      newbie,
-      this.users
-    )(this.networkSystem.newbie(newbie));
+      this.connectedUsers[connectionId] = newbie;
+      return logHook(
+        `Game newbie`,
+        this.gameId,
+        newbie,
+        this.users
+      )(this.networkSystem.newbie(newbie));
+    }
   };
 
   private onLeave = ({ connectionId }: IGameConnectionIdRequest) => {
     const leaver = this.connectedUsers[connectionId];
-    leaver.connectionId = "";
-    leaver.load = false;
-    delete this.connectedUsers[connectionId];
+    const observer = this.observers.find(o => o.connectionId === connectionId);
 
-    // No reset for leaver because they can reconnect.
+    if (observer) {
+      observer.connectionId = "";
+    } else if (leaver) {
+      leaver.connectionId = "";
+      leaver.load = false;
+      delete this.connectedUsers[connectionId];
+
+      // No reset for leaver because they can reconnect.
+    }
   };
 
   private onLoad = ({ connectionId }: IGameConnectionIdRequest) => {
     const user = this.connectedUsers[connectionId];
-    user.load = true;
-    placeUsersToBoard(this.board, user.index);
-    return logHook(
-      `Game load`,
-      this.gameId,
-      connectionId,
-      this.users
-    )(this.networkSystem.load(user, this.ticker!.stage, this.ticker!.age));
+    const observer = this.observers.find(o => o.connectionId === connectionId);
+    if (observer) {
+      return logHook(
+        `Game load observer`,
+        this.gameId,
+        observer
+      )(
+        this.networkSystem.loadObserver(
+          observer,
+          this.ticker!.stage,
+          this.ticker!.age
+        )
+      );
+    } else if (user) {
+      user.load = true;
+      placeUsersToBoard(this.board, user.index);
+      return logHook(
+        `Game load`,
+        this.gameId,
+        connectionId,
+        this.users
+      )(this.networkSystem.load(user, this.ticker!.stage, this.ticker!.age));
+    }
   };
 
   private broadcastStage = (stage: GameStage, age: number) =>

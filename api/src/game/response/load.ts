@@ -21,12 +21,15 @@ export const replyLoad = (
   board: Board,
   stage: GameStage,
   age: number,
-  energy: number
+  energy: number,
+  observer: boolean
 ) => {
   const replier = reply(connectionId);
   return replier<ILoadResponse>({
     type: "load",
-    me: gameUserToUser(users.find(u => u.connectionId === connectionId)),
+    me: observer
+      ? { color: "#000000", index: -2 }
+      : gameUserToUser(users.find(u => u.connectionId === connectionId)),
     users: users.map(gameUserToUser),
     board,
     stage,

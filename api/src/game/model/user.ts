@@ -11,6 +11,11 @@ export interface IGameUser extends IUser {
   energy: number;
 }
 
+export interface IGameObserver {
+  connectionId: string;
+  memberId: string;
+}
+
 export const gameUserToUser = ({ index, color }: IGameUser) => ({
   index,
   color

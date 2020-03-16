@@ -17,7 +17,7 @@ export const handle: APIGatewayProxyHandler = async event => {
   return useRedis(async redisConnection => {
     const gameId: string | null = await redisGet(
       redisConnection,
-      env.redisKeyPrefixOfConnectionIdAndGameID + connectionId
+      env.redisKeyPrefixOfConnectionIdAndGameId + connectionId
     );
     logger.info(`Game id`, connectionId, gameId);
 
@@ -37,7 +37,7 @@ export const handle: APIGatewayProxyHandler = async event => {
       );
       await redisDel(
         redisConnection,
-        env.redisKeyPrefixOfConnectionIdAndGameID + connectionId
+        env.redisKeyPrefixOfConnectionIdAndGameId + connectionId
       );
     }
 

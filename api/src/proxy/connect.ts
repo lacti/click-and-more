@@ -43,7 +43,7 @@ export const handle: APIGatewayProxyHandler = async event => {
     // Register connection and start a game.
     await redisSet(
       redisConnection,
-      env.redisKeyPrefixOfConnectionIdAndGameID + connectionId,
+      env.redisKeyPrefixOfConnectionIdAndGameId + connectionId,
       gameId,
       { expirationMillis }
     );

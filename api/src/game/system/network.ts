@@ -1,6 +1,6 @@
 import { Board, calculateScore, IPos, TileSync } from "../model";
 import { GameStage } from "../model/stage";
-import { IGameUser } from "../model/user";
+import { IGameObserver, IGameUser } from "../model/user";
 import {
   broadcastEnd,
   broadcastNewbie,
@@ -15,11 +15,15 @@ import { IRespondResult } from "../response/support/broadcast";
 export class NetworkSystem {
   constructor(
     private readonly users: IGameUser[],
+    private readonly observers: IGameObserver[],
     private readonly board: Board
   ) {}
 
   public get connectionIds() {
-    return this.users.map(u => u.connectionId).filter(Boolean);
+    return [
+      ...this.users.map(u => u.connectionId).filter(Boolean),
+      ...this.observers.map(o => o.connectionId).filter(Boolean)
+    ];
   }
 
   public end = () =>
@@ -61,15 +65,22 @@ export class NetworkSystem {
       this.board,
       stage,
       age,
-      user.energy
+      user.energy,
+      false
     ).then(() => this.allUserTiles(user));
 
+  public loadObserver = (user: IGameObserver, stage: GameStage, age: number) =>
+    replyLoad(user.connectionId, this.users, this.board, stage, age, 0, true);
+
   public stage = (stage: GameStage, age: number) =>
-    Promise.all(
-      this.users
+    Promise.all([
+      ...this.users
         .filter(u => u.connectionId.length > 0)
-        .map(u => replyStage(u.connectionId, stage, age, u.energy))
-    );
+        .map(u => replyStage(u.connectionId, stage, age, u.energy)),
+      ...this.observers
+        .filter(o => o.connectionId.length > 0)
+        .map(o => replyStage(o.connectionId, stage, age, 0))
+    ]);
 
   public energy = (user: IGameUser) =>
     replyEnergy(user.connectionId, user.energy);

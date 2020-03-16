@@ -23,7 +23,7 @@ async function setupLobbyInLocal() {
   return new Promise<IGameStart>(async (resolve, reject) => {
     const testStart = {
       gameId: "local-test-" + Date.now(),
-      members: [{ memberId: "me" }]
+      members: [{ memberId: "me" }, { memberId: "ob", observer: true }]
     };
     fetch("http://localhost:3000/debug", {
       method: "POST",
@@ -38,7 +38,8 @@ async function setupLobbyInLocal() {
     resolve({
       gameId: testStart.gameId,
       playerId: testStart.members[0].memberId,
-      url: "ws://localhost:3001"
+      url: "ws://localhost:3001",
+      observer: testStart.members[0].observer
     });
   });
 }

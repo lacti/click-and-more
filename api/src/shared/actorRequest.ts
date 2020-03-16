@@ -2,6 +2,7 @@ export interface IGameMember {
   memberId: string;
   name: string;
   email: string;
+  observer?: boolean;
 }
 
 export interface IGameActorStartEvent {
