@@ -22,7 +22,7 @@ import {
 } from "./model/constraints";
 import { GameStage } from "./model/stage";
 import processChange from "./processChange";
-import { dropConnection } from "./response/drop";
+import { dropConnection } from "./response/support/drop";
 import env from "./support/env";
 import sleep from "./support/sleep";
 import Ticker from "./support/ticker";

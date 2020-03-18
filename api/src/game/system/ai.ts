@@ -3,7 +3,7 @@ import logger from "../logger";
 import { Board, IGameUser, isEnemyTile } from "../model";
 import { initialEnergy } from "../model/constraints";
 import { calculateNewTileCost, calculateUpgradeCost } from "../model/costs";
-import { FakeConnectionId } from "../response/support/reply";
+import { FakeConnectionId } from "../response/support/fake";
 import { Timer } from "../support/timer";
 import { getPlayerColor } from "../support/utils";
 import { BoardValidator } from "./validator";

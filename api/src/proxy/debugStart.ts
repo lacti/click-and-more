@@ -28,7 +28,7 @@ export const handle: APIGatewayProxyHandler = async event => {
   logger.debug(`Release actor's lock`, startEvent.gameId);
 
   // Start a new Lambda to process game messages.
-  await new Lambda({
+  const promise = new Lambda({
     endpoint: `http://localhost:3000`
   })
     .invoke({
@@ -38,5 +38,9 @@ export const handle: APIGatewayProxyHandler = async event => {
       Payload: JSON.stringify(startEvent)
     })
     .promise();
+
+  if (!env.isOffline) {
+    await promise;
+  }
   return responses.OK;
 };

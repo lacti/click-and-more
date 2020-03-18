@@ -2,8 +2,7 @@ import { ApiGatewayManagementApi } from "aws-sdk";
 import mem from "mem";
 import logger from "../../logger";
 import env from "../../support/env";
-
-export const FakeConnectionId = `__FAKE_CONNECTION_ID__`;
+import { FakeConnectionId } from "./fake";
 
 const apimgmt = new ApiGatewayManagementApi({
   endpoint: env.isOffline ? `http://localhost:3001` : env.webSocketEndpoint

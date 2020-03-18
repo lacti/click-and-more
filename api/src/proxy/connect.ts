@@ -17,7 +17,7 @@ export const handle: APIGatewayProxyHandler = async event => {
   const { connectionId } = event.requestContext;
   const getParameter = (key: string) =>
     event.headers[key] ?? (event.queryStringParameters ?? {})[key];
-  return useRedis(async redisConnection => {
+  const response = await useRedis(async redisConnection => {
     // A client should send a "X-GAME-ID" via HTTP Header.
     const gameId = getParameter("x-game-id");
     const memberId = getParameter("x-member-id");
@@ -68,4 +68,5 @@ export const handle: APIGatewayProxyHandler = async event => {
     logger.info(`Game logged`, gameId, connectionId);
     return responses.OK;
   });
+  return response;
 };
