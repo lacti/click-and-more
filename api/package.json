@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless package",
     "deploy": "node --max-old-space-size=4096 node_modules/serverless/bin/serverless deploy",
-    "start": "cross-env STAGE=\"local\" REDIS_HOST=\"localhost\" REDIS_PASSWORD=\"\" sls offline"
+    "start": "cross-env STAGE=\"local\" REDIS_HOST=\"localhost\" REDIS_PASSWORD=\"\" sls offline",
+    "start:docker": "cross-env STAGE=\"local\" REDIS_HOST=\"redis\" REDIS_PASSWORD=\"\" sls offline --host 0.0.0.0"
   },
   "dependencies": {
     "@yingyeothon/actor-system": "^0.2.4",

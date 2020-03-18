@@ -39,7 +39,7 @@ export const handle: APIGatewayProxyHandler = async event => {
     })
     .promise();
 
-  if (!env.isOffline) {
+  if (event.queryStringParameters?.waitSetup) {
     await promise;
   }
   return responses.OK;

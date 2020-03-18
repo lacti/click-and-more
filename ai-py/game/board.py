@@ -1,6 +1,14 @@
 from dataclasses import dataclass
 from typing import List
 
+USER_MARKS = ' @#%$*&'
+
+
+def as_user_mark(user_index: int):
+    if user_index > 0:
+        return USER_MARKS[user_index]
+    return ' '
+
 
 @dataclass
 class Tile:
@@ -15,12 +23,12 @@ class Tile:
     def is_owned(self):
         return self.user_index > 0
 
-    def __str__(self):
-        user_mark = ' '
-        if self.user_index > 0:
-            user_mark = ' @#%$*&'[self.user_index]
-        return '[{0} {1:2d}/{2:2d}/{3:2d}/{4:2d}]'.format(user_mark, self.defence, self.offence, self.productivity,
-                                                          self.attack_range)
+    def as_mark(self):
+        user_mark = as_user_mark(self.user_index)
+        return '[{0}]'.format(user_mark)
+
+    def as_stat(self):
+        return '[{0:d}/{1:d}/{2:d}/{3:d}]'.format(self.defence, self.offence, self.productivity, self.attack_range)
 
 
 @dataclass
@@ -30,8 +38,10 @@ class Board:
     def __str__(self):
         table: List[str] = []
         for row in self.tiles:
-            tr: List[str] = []
+            marks: List[str] = []
+            stats: List[str] = []
             for tile in row:
-                tr.append(str(tile))
-            table.append(''.join(tr))
+                marks.append(tile.as_mark())
+                stats.append(tile.as_stat())
+            table.append(''.join(marks) + ' ' + ''.join(stats))
         return '\n'.join(table)

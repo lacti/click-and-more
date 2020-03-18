@@ -25,7 +25,7 @@ async function setupLobbyInLocal() {
       gameId: "local-test-" + Date.now(),
       members: [{ memberId: "me" }, { memberId: "ob", observer: true }]
     };
-    fetch("http://localhost:3000/debug", {
+    fetch("http://localhost:3000/debug?waitSetup=1", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

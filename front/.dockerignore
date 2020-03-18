@@ -1,0 +1,10 @@
+.vscode
+build
+node_modules
+
+.deploy.sh
+.envrc
+.gitignore
+.dockerignore
+yarn-*.log
+*.swp

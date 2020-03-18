@@ -1,0 +1,21 @@
+version: '3'
+services:
+  front:
+    image: lacti/click-and-more-front
+    build: front
+    ports:
+      - 8080:80
+  redis:
+    image: redis
+  api:
+    image: lacti/click-and-more-api
+    build: api
+    ports:
+      - 3000:3000
+      - 3001:3001
+    environment:
+      - REDIS_HOST=redis
+      - AWS_ACCESS_KEY_ID=key
+      - AWS_SECRET_ACCESS_KEY=secret
+    links:
+      - redis

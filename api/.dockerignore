@@ -1,0 +1,12 @@
+.serverless
+.vscode
+.webpack
+node_modules
+
+.envrc
+.dockerignore
+.gitignore
+jest.config.js
+tslint.json
+yarn-*.log
+*.swp
